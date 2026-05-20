@@ -1,0 +1,6 @@
+in:
+  source: examples/hello_user_name.asm
+  input: examples/hello_user_name_input.txt
+out: |
+  Hello, World!
+ticks: 354

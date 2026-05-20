@@ -1,0 +1,6 @@
+in:
+  source: examples/double_arith.asm
+out: |
+  2 1
+
+ticks: 21

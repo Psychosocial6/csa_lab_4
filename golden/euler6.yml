@@ -1,0 +1,6 @@
+in:
+  source: examples/euler6.asm
+out: |
+  2640
+
+ticks: 215

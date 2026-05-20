@@ -1,0 +1,6 @@
+in:
+  source: examples/sort.asm
+out: |
+  13458
+
+ticks: 522

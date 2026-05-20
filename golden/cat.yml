@@ -1,0 +1,7 @@
+in:
+  source: examples/cat.asm
+  input: examples/cat_input.txt
+out: |
+  Hello
+
+ticks: 43

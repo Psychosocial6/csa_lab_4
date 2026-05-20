@@ -1,0 +1,6 @@
+in:
+  source: examples/hello.asm
+out: |
+  Hello, World!
+
+ticks: 141
