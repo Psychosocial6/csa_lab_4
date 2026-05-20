@@ -7,7 +7,6 @@ from enum import Enum
 
 
 class Opcode(int, Enum):
-
     HALT = 0x0
     LOAD = 0x1
     STORE = 0x2
@@ -27,7 +26,6 @@ class Opcode(int, Enum):
 
 
 class Mode(int, Enum):
-
     ABSOLUTE = 0x0
     IMMEDIATE = 0x1
     INDIRECT = 0x2
@@ -42,6 +40,7 @@ class Mode(int, Enum):
     DEC_ACC = 0x6
     JC = 0x7
     JNC = 0x8
+
 
 INPUT_PORT = 0xFFFFF0
 OUTPUT_PORT = 0xFFFFF1

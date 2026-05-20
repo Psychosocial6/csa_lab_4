@@ -14,6 +14,7 @@ from isa import (
     to_hex,
 )
 
+
 @dataclass
 class ParserState:
     section: str = ".text"

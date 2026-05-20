@@ -34,8 +34,8 @@ class PSW:
     def __repr__(self) -> str:
         return f"Z={int(self.Z)} N={int(self.N)} C={int(self.C)} IEF={int(self.IEF)}"
 
-class DataPath:
 
+class DataPath:
     def __init__(self, data_memory_size: int, initial_data: list[tuple[int, int]]) -> None:
         assert data_memory_size > 0
         self.data_memory_size = data_memory_size
