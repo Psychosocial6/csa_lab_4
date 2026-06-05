@@ -1,6 +1,469 @@
 in:
   source: examples/hello.asm
-out: |
+ticks: 434
+out_stdout: |
   Hello, World!
-
-ticks: 141
+out_code: |-
+  0 - 11000000 - load 0
+  1 - C0000003 - call 0x03
+  2 - F7000000 - halt
+  3 - 2000000F - store 0x0F
+  4 - 1200000F - load 0x0F
+  5 - 8000000B - jz 0x0B
+  6 - 20FFFFF1 - store 0xFFFFF1
+  7 - 1000000F - load 0x0F
+  8 - F3000000 - inc
+  9 - 2000000F - store 0x0F
+  10 - 70000004 - jmp 0x04
+  11 - F6000000 - ret
+out_journal: |-
+  TICK:   0 PC:   0 | INSTR: -            | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:   1 PC:   1 | INSTR: load 0       | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:   2 PC:   1 | INSTR: load 0       | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:   3 PC:   1 | INSTR: load 0       | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:   4 PC:   1 | INSTR: load 0       | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:   5 PC:   3 | INSTR: call 0x03    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:   6 PC:   3 | INSTR: call 0x03    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:   7 PC:   3 | INSTR: call 0x03    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:   8 PC:   4 | INSTR: store 0x0F   | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:   9 PC:   4 | INSTR: store 0x0F   | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:  10 PC:   4 | INSTR: store 0x0F   | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:  11 PC:   4 | INSTR: store 0x0F   | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:  12 PC:   5 | INSTR: load 0x0F    | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  13 PC:   5 | INSTR: load 0x0F    | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  14 PC:   5 | INSTR: load 0x0F    | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  15 PC:   5 | INSTR: load 0x0F    | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  16 PC:   5 | INSTR: load 0x0F    | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  17 PC:   5 | INSTR: load 0x0F    | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  18 PC:   5 | INSTR: load 0x0F    | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  19 PC:   6 | INSTR: jz 0x0B      | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  20 PC:   6 | INSTR: jz 0x0B      | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  21 PC:   6 | INSTR: jz 0x0B      | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  output: '' << 'H'
+  TICK:  22 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  23 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  24 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  25 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    72 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  26 PC:   8 | INSTR: load 0x0F    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:  27 PC:   8 | INSTR: load 0x0F    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:  28 PC:   8 | INSTR: load 0x0F    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:  29 PC:   8 | INSTR: load 0x0F    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:  30 PC:   8 | INSTR: load 0x0F    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:  31 PC:   9 | INSTR: inc          | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  32 PC:   9 | INSTR: inc          | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  33 PC:   9 | INSTR: inc          | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  34 PC:  10 | INSTR: store 0x0F   | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  35 PC:  10 | INSTR: store 0x0F   | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  36 PC:  10 | INSTR: store 0x0F   | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  37 PC:  10 | INSTR: store 0x0F   | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  38 PC:   4 | INSTR: jmp 0x04     | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  39 PC:   4 | INSTR: jmp 0x04     | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  40 PC:   4 | INSTR: jmp 0x04     | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  41 PC:   5 | INSTR: load 0x0F    | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  42 PC:   5 | INSTR: load 0x0F    | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  43 PC:   5 | INSTR: load 0x0F    | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  44 PC:   5 | INSTR: load 0x0F    | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  45 PC:   5 | INSTR: load 0x0F    | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  46 PC:   5 | INSTR: load 0x0F    | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  47 PC:   5 | INSTR: load 0x0F    | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  48 PC:   6 | INSTR: jz 0x0B      | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  49 PC:   6 | INSTR: jz 0x0B      | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  50 PC:   6 | INSTR: jz 0x0B      | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  output: 'H' << 'e'
+  TICK:  51 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  52 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  53 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  54 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   101 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  55 PC:   8 | INSTR: load 0x0F    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  56 PC:   8 | INSTR: load 0x0F    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  57 PC:   8 | INSTR: load 0x0F    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  58 PC:   8 | INSTR: load 0x0F    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  59 PC:   8 | INSTR: load 0x0F    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  60 PC:   9 | INSTR: inc          | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  61 PC:   9 | INSTR: inc          | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  62 PC:   9 | INSTR: inc          | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  63 PC:  10 | INSTR: store 0x0F   | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  64 PC:  10 | INSTR: store 0x0F   | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  65 PC:  10 | INSTR: store 0x0F   | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  66 PC:  10 | INSTR: store 0x0F   | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  67 PC:   4 | INSTR: jmp 0x04     | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  68 PC:   4 | INSTR: jmp 0x04     | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  69 PC:   4 | INSTR: jmp 0x04     | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  70 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  71 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  72 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  73 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  74 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  75 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  76 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  77 PC:   6 | INSTR: jz 0x0B      | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  78 PC:   6 | INSTR: jz 0x0B      | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  79 PC:   6 | INSTR: jz 0x0B      | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  output: 'He' << 'l'
+  TICK:  80 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  81 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  82 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  83 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  84 PC:   8 | INSTR: load 0x0F    | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  85 PC:   8 | INSTR: load 0x0F    | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  86 PC:   8 | INSTR: load 0x0F    | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  87 PC:   8 | INSTR: load 0x0F    | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  88 PC:   8 | INSTR: load 0x0F    | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  89 PC:   9 | INSTR: inc          | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  90 PC:   9 | INSTR: inc          | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  91 PC:   9 | INSTR: inc          | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  92 PC:  10 | INSTR: store 0x0F   | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  93 PC:  10 | INSTR: store 0x0F   | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  94 PC:  10 | INSTR: store 0x0F   | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  95 PC:  10 | INSTR: store 0x0F   | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  96 PC:   4 | INSTR: jmp 0x04     | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  97 PC:   4 | INSTR: jmp 0x04     | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  98 PC:   4 | INSTR: jmp 0x04     | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  99 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 100 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 101 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 102 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 103 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 104 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 105 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 106 PC:   6 | INSTR: jz 0x0B      | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 107 PC:   6 | INSTR: jz 0x0B      | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 108 PC:   6 | INSTR: jz 0x0B      | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  output: 'Hel' << 'l'
+  TICK: 109 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 110 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 111 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 112 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 113 PC:   8 | INSTR: load 0x0F    | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 114 PC:   8 | INSTR: load 0x0F    | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 115 PC:   8 | INSTR: load 0x0F    | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 116 PC:   8 | INSTR: load 0x0F    | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 117 PC:   8 | INSTR: load 0x0F    | ACC:     3 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 118 PC:   9 | INSTR: inc          | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 119 PC:   9 | INSTR: inc          | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 120 PC:   9 | INSTR: inc          | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 121 PC:  10 | INSTR: store 0x0F   | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 122 PC:  10 | INSTR: store 0x0F   | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 123 PC:  10 | INSTR: store 0x0F   | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 124 PC:  10 | INSTR: store 0x0F   | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 125 PC:   4 | INSTR: jmp 0x04     | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 126 PC:   4 | INSTR: jmp 0x04     | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 127 PC:   4 | INSTR: jmp 0x04     | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 128 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 129 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 130 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 131 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 132 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 133 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 134 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 135 PC:   6 | INSTR: jz 0x0B      | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 136 PC:   6 | INSTR: jz 0x0B      | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 137 PC:   6 | INSTR: jz 0x0B      | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  output: 'Hell' << 'o'
+  TICK: 138 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 139 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 140 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 141 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 142 PC:   8 | INSTR: load 0x0F    | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 143 PC:   8 | INSTR: load 0x0F    | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 144 PC:   8 | INSTR: load 0x0F    | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 145 PC:   8 | INSTR: load 0x0F    | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 146 PC:   8 | INSTR: load 0x0F    | ACC:     4 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 147 PC:   9 | INSTR: inc          | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 148 PC:   9 | INSTR: inc          | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 149 PC:   9 | INSTR: inc          | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 150 PC:  10 | INSTR: store 0x0F   | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 151 PC:  10 | INSTR: store 0x0F   | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 152 PC:  10 | INSTR: store 0x0F   | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 153 PC:  10 | INSTR: store 0x0F   | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 154 PC:   4 | INSTR: jmp 0x04     | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 155 PC:   4 | INSTR: jmp 0x04     | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 156 PC:   4 | INSTR: jmp 0x04     | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 157 PC:   5 | INSTR: load 0x0F    | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 158 PC:   5 | INSTR: load 0x0F    | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 159 PC:   5 | INSTR: load 0x0F    | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 160 PC:   5 | INSTR: load 0x0F    | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 161 PC:   5 | INSTR: load 0x0F    | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 162 PC:   5 | INSTR: load 0x0F    | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 163 PC:   5 | INSTR: load 0x0F    | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 164 PC:   6 | INSTR: jz 0x0B      | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 165 PC:   6 | INSTR: jz 0x0B      | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 166 PC:   6 | INSTR: jz 0x0B      | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  output: 'Hello' << ','
+  TICK: 167 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 168 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 169 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 170 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    44 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 171 PC:   8 | INSTR: load 0x0F    | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 172 PC:   8 | INSTR: load 0x0F    | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 173 PC:   8 | INSTR: load 0x0F    | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 174 PC:   8 | INSTR: load 0x0F    | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 175 PC:   8 | INSTR: load 0x0F    | ACC:     5 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 176 PC:   9 | INSTR: inc          | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 177 PC:   9 | INSTR: inc          | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 178 PC:   9 | INSTR: inc          | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 179 PC:  10 | INSTR: store 0x0F   | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 180 PC:  10 | INSTR: store 0x0F   | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 181 PC:  10 | INSTR: store 0x0F   | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 182 PC:  10 | INSTR: store 0x0F   | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 183 PC:   4 | INSTR: jmp 0x04     | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 184 PC:   4 | INSTR: jmp 0x04     | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 185 PC:   4 | INSTR: jmp 0x04     | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 186 PC:   5 | INSTR: load 0x0F    | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 187 PC:   5 | INSTR: load 0x0F    | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 188 PC:   5 | INSTR: load 0x0F    | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 189 PC:   5 | INSTR: load 0x0F    | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 190 PC:   5 | INSTR: load 0x0F    | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 191 PC:   5 | INSTR: load 0x0F    | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 192 PC:   5 | INSTR: load 0x0F    | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 193 PC:   6 | INSTR: jz 0x0B      | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 194 PC:   6 | INSTR: jz 0x0B      | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 195 PC:   6 | INSTR: jz 0x0B      | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  output: 'Hello,' << ' '
+  TICK: 196 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 197 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 198 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 199 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 200 PC:   8 | INSTR: load 0x0F    | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 201 PC:   8 | INSTR: load 0x0F    | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 202 PC:   8 | INSTR: load 0x0F    | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 203 PC:   8 | INSTR: load 0x0F    | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 204 PC:   8 | INSTR: load 0x0F    | ACC:     6 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 205 PC:   9 | INSTR: inc          | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 206 PC:   9 | INSTR: inc          | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 207 PC:   9 | INSTR: inc          | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 208 PC:  10 | INSTR: store 0x0F   | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 209 PC:  10 | INSTR: store 0x0F   | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 210 PC:  10 | INSTR: store 0x0F   | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 211 PC:  10 | INSTR: store 0x0F   | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 212 PC:   4 | INSTR: jmp 0x04     | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 213 PC:   4 | INSTR: jmp 0x04     | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 214 PC:   4 | INSTR: jmp 0x04     | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 215 PC:   5 | INSTR: load 0x0F    | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 216 PC:   5 | INSTR: load 0x0F    | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 217 PC:   5 | INSTR: load 0x0F    | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 218 PC:   5 | INSTR: load 0x0F    | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 219 PC:   5 | INSTR: load 0x0F    | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 220 PC:   5 | INSTR: load 0x0F    | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 221 PC:   5 | INSTR: load 0x0F    | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 222 PC:   6 | INSTR: jz 0x0B      | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 223 PC:   6 | INSTR: jz 0x0B      | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 224 PC:   6 | INSTR: jz 0x0B      | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  output: 'Hello, ' << 'W'
+  TICK: 225 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 226 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 227 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 228 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    87 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 229 PC:   8 | INSTR: load 0x0F    | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 230 PC:   8 | INSTR: load 0x0F    | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 231 PC:   8 | INSTR: load 0x0F    | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 232 PC:   8 | INSTR: load 0x0F    | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 233 PC:   8 | INSTR: load 0x0F    | ACC:     7 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 234 PC:   9 | INSTR: inc          | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 235 PC:   9 | INSTR: inc          | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 236 PC:   9 | INSTR: inc          | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 237 PC:  10 | INSTR: store 0x0F   | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 238 PC:  10 | INSTR: store 0x0F   | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 239 PC:  10 | INSTR: store 0x0F   | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 240 PC:  10 | INSTR: store 0x0F   | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 241 PC:   4 | INSTR: jmp 0x04     | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 242 PC:   4 | INSTR: jmp 0x04     | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 243 PC:   4 | INSTR: jmp 0x04     | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 244 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 245 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 246 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 247 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 248 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 249 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 250 PC:   5 | INSTR: load 0x0F    | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 251 PC:   6 | INSTR: jz 0x0B      | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 252 PC:   6 | INSTR: jz 0x0B      | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 253 PC:   6 | INSTR: jz 0x0B      | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  output: 'Hello, W' << 'o'
+  TICK: 254 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 255 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 256 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 257 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   111 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 258 PC:   8 | INSTR: load 0x0F    | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 259 PC:   8 | INSTR: load 0x0F    | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 260 PC:   8 | INSTR: load 0x0F    | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 261 PC:   8 | INSTR: load 0x0F    | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 262 PC:   8 | INSTR: load 0x0F    | ACC:     8 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 263 PC:   9 | INSTR: inc          | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 264 PC:   9 | INSTR: inc          | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 265 PC:   9 | INSTR: inc          | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 266 PC:  10 | INSTR: store 0x0F   | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 267 PC:  10 | INSTR: store 0x0F   | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 268 PC:  10 | INSTR: store 0x0F   | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 269 PC:  10 | INSTR: store 0x0F   | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 270 PC:   4 | INSTR: jmp 0x04     | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 271 PC:   4 | INSTR: jmp 0x04     | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 272 PC:   4 | INSTR: jmp 0x04     | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 273 PC:   5 | INSTR: load 0x0F    | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 274 PC:   5 | INSTR: load 0x0F    | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 275 PC:   5 | INSTR: load 0x0F    | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 276 PC:   5 | INSTR: load 0x0F    | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 277 PC:   5 | INSTR: load 0x0F    | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 278 PC:   5 | INSTR: load 0x0F    | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 279 PC:   5 | INSTR: load 0x0F    | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 280 PC:   6 | INSTR: jz 0x0B      | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 281 PC:   6 | INSTR: jz 0x0B      | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 282 PC:   6 | INSTR: jz 0x0B      | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  output: 'Hello, Wo' << 'r'
+  TICK: 283 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 284 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 285 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 286 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   114 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 287 PC:   8 | INSTR: load 0x0F    | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 288 PC:   8 | INSTR: load 0x0F    | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 289 PC:   8 | INSTR: load 0x0F    | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 290 PC:   8 | INSTR: load 0x0F    | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 291 PC:   8 | INSTR: load 0x0F    | ACC:     9 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 292 PC:   9 | INSTR: inc          | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 293 PC:   9 | INSTR: inc          | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 294 PC:   9 | INSTR: inc          | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 295 PC:  10 | INSTR: store 0x0F   | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 296 PC:  10 | INSTR: store 0x0F   | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 297 PC:  10 | INSTR: store 0x0F   | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 298 PC:  10 | INSTR: store 0x0F   | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 299 PC:   4 | INSTR: jmp 0x04     | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 300 PC:   4 | INSTR: jmp 0x04     | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 301 PC:   4 | INSTR: jmp 0x04     | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 302 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 303 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 304 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 305 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 306 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 307 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 308 PC:   5 | INSTR: load 0x0F    | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 309 PC:   6 | INSTR: jz 0x0B      | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 310 PC:   6 | INSTR: jz 0x0B      | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 311 PC:   6 | INSTR: jz 0x0B      | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  output: 'Hello, Wor' << 'l'
+  TICK: 312 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 313 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 314 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 315 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   108 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 316 PC:   8 | INSTR: load 0x0F    | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 317 PC:   8 | INSTR: load 0x0F    | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 318 PC:   8 | INSTR: load 0x0F    | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 319 PC:   8 | INSTR: load 0x0F    | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 320 PC:   8 | INSTR: load 0x0F    | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 321 PC:   9 | INSTR: inc          | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 322 PC:   9 | INSTR: inc          | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 323 PC:   9 | INSTR: inc          | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 324 PC:  10 | INSTR: store 0x0F   | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 325 PC:  10 | INSTR: store 0x0F   | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 326 PC:  10 | INSTR: store 0x0F   | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 327 PC:  10 | INSTR: store 0x0F   | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 328 PC:   4 | INSTR: jmp 0x04     | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 329 PC:   4 | INSTR: jmp 0x04     | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 330 PC:   4 | INSTR: jmp 0x04     | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 331 PC:   5 | INSTR: load 0x0F    | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 332 PC:   5 | INSTR: load 0x0F    | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 333 PC:   5 | INSTR: load 0x0F    | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 334 PC:   5 | INSTR: load 0x0F    | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 335 PC:   5 | INSTR: load 0x0F    | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 336 PC:   5 | INSTR: load 0x0F    | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 337 PC:   5 | INSTR: load 0x0F    | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 338 PC:   6 | INSTR: jz 0x0B      | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 339 PC:   6 | INSTR: jz 0x0B      | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 340 PC:   6 | INSTR: jz 0x0B      | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  output: 'Hello, Worl' << 'd'
+  TICK: 341 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 342 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 343 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 344 PC:   7 | INSTR: store 0xFFFFF1 | ACC:   100 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 345 PC:   8 | INSTR: load 0x0F    | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 346 PC:   8 | INSTR: load 0x0F    | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 347 PC:   8 | INSTR: load 0x0F    | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 348 PC:   8 | INSTR: load 0x0F    | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 349 PC:   8 | INSTR: load 0x0F    | ACC:    11 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 350 PC:   9 | INSTR: inc          | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 351 PC:   9 | INSTR: inc          | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 352 PC:   9 | INSTR: inc          | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 353 PC:  10 | INSTR: store 0x0F   | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 354 PC:  10 | INSTR: store 0x0F   | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 355 PC:  10 | INSTR: store 0x0F   | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 356 PC:  10 | INSTR: store 0x0F   | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 357 PC:   4 | INSTR: jmp 0x04     | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 358 PC:   4 | INSTR: jmp 0x04     | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 359 PC:   4 | INSTR: jmp 0x04     | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 360 PC:   5 | INSTR: load 0x0F    | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 361 PC:   5 | INSTR: load 0x0F    | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 362 PC:   5 | INSTR: load 0x0F    | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 363 PC:   5 | INSTR: load 0x0F    | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 364 PC:   5 | INSTR: load 0x0F    | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 365 PC:   5 | INSTR: load 0x0F    | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 366 PC:   5 | INSTR: load 0x0F    | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 367 PC:   6 | INSTR: jz 0x0B      | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 368 PC:   6 | INSTR: jz 0x0B      | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 369 PC:   6 | INSTR: jz 0x0B      | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  output: 'Hello, World' << '!'
+  TICK: 370 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 371 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 372 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 373 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    33 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 374 PC:   8 | INSTR: load 0x0F    | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 375 PC:   8 | INSTR: load 0x0F    | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 376 PC:   8 | INSTR: load 0x0F    | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 377 PC:   8 | INSTR: load 0x0F    | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 378 PC:   8 | INSTR: load 0x0F    | ACC:    12 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 379 PC:   9 | INSTR: inc          | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 380 PC:   9 | INSTR: inc          | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 381 PC:   9 | INSTR: inc          | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 382 PC:  10 | INSTR: store 0x0F   | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 383 PC:  10 | INSTR: store 0x0F   | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 384 PC:  10 | INSTR: store 0x0F   | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 385 PC:  10 | INSTR: store 0x0F   | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 386 PC:   4 | INSTR: jmp 0x04     | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 387 PC:   4 | INSTR: jmp 0x04     | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 388 PC:   4 | INSTR: jmp 0x04     | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 389 PC:   5 | INSTR: load 0x0F    | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 390 PC:   5 | INSTR: load 0x0F    | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 391 PC:   5 | INSTR: load 0x0F    | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 392 PC:   5 | INSTR: load 0x0F    | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 393 PC:   5 | INSTR: load 0x0F    | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 394 PC:   5 | INSTR: load 0x0F    | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 395 PC:   5 | INSTR: load 0x0F    | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 396 PC:   6 | INSTR: jz 0x0B      | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 397 PC:   6 | INSTR: jz 0x0B      | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 398 PC:   6 | INSTR: jz 0x0B      | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  output: 'Hello, World!' << '\n'
+  TICK: 399 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 400 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 401 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 402 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    10 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 403 PC:   8 | INSTR: load 0x0F    | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 404 PC:   8 | INSTR: load 0x0F    | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 405 PC:   8 | INSTR: load 0x0F    | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 406 PC:   8 | INSTR: load 0x0F    | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 407 PC:   8 | INSTR: load 0x0F    | ACC:    13 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 408 PC:   9 | INSTR: inc          | ACC:    14 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 409 PC:   9 | INSTR: inc          | ACC:    14 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 410 PC:   9 | INSTR: inc          | ACC:    14 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 411 PC:  10 | INSTR: store 0x0F   | ACC:    14 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 412 PC:  10 | INSTR: store 0x0F   | ACC:    14 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 413 PC:  10 | INSTR: store 0x0F   | ACC:    14 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 414 PC:  10 | INSTR: store 0x0F   | ACC:    14 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 415 PC:   4 | INSTR: jmp 0x04     | ACC:    14 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 416 PC:   4 | INSTR: jmp 0x04     | ACC:    14 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 417 PC:   4 | INSTR: jmp 0x04     | ACC:    14 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK: 418 PC:   5 | INSTR: load 0x0F    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 419 PC:   5 | INSTR: load 0x0F    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 420 PC:   5 | INSTR: load 0x0F    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 421 PC:   5 | INSTR: load 0x0F    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 422 PC:   5 | INSTR: load 0x0F    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 423 PC:   5 | INSTR: load 0x0F    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 424 PC:   5 | INSTR: load 0x0F    | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 425 PC:  11 | INSTR: jz 0x0B      | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 426 PC:  11 | INSTR: jz 0x0B      | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 427 PC:  11 | INSTR: jz 0x0B      | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 428 PC:   2 | INSTR: ret          | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 429 PC:   2 | INSTR: ret          | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 430 PC:   2 | INSTR: ret          | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 431 PC:   2 | INSTR: ret          | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 432 PC:   2 | INSTR: ret          | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 433 PC:   3 | INSTR: halt         | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 434 PC:   3 | INSTR: halt         | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  output_buffer: 'Hello, World!\n'

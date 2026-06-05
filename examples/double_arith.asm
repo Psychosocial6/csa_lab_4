@@ -1,5 +1,10 @@
 .equ OUTPUT_PORT 0xFFFFF1
-.equ OUTPUT_NUM_PORT 0xFFFFF4
+.equ OUTPUT_NUM_PORT 0xFFFFF2
+.equ PRINT_SPACE 1
+.macro PRINT_SPACE_CHAR
+    LOAD #32
+    STORE OUTPUT_PORT
+.endmacro
 
 .section .data
 a_high: .word 1
@@ -14,22 +19,23 @@ start:
     LOAD a_low
     ADD b_low
     STORE r_low
-    JC has_carry
-    LOAD #0
-    STORE r_high
-    JMP add_high
-has_carry:
-    LOAD #1
-    STORE r_high
-add_high:
+    JC low_carry
     LOAD a_high
     ADD b_high
-    ADD r_high
     STORE r_high
-    LOAD r_high
+    JMP print_res
+
+low_carry:
+    LOAD a_high
+    ADD b_high
+    INC
+    STORE r_high
+
+print_res:
     STORE OUTPUT_NUM_PORT
-    LOAD #32
-    STORE OUTPUT_PORT
+.if PRINT_SPACE
+    PRINT_SPACE_CHAR
+.endif
     LOAD r_low
     STORE OUTPUT_NUM_PORT
     HALT

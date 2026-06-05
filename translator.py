@@ -44,7 +44,7 @@ def parse_operand(token: str, state: ParserState) -> tuple[Mode, int | str]:
         try:
             return Mode.IMMEDIATE, parse_number(inner)
         except ValueError:
-            return Mode.IMMEDIATE, inner  # label or constant
+            return Mode.IMMEDIATE, inner
     if token.startswith("[") and token.endswith("]"):
         inner = token[1:-1].strip()
         return Mode.INDIRECT, inner
@@ -55,6 +55,113 @@ def parse_operand(token: str, state: ParserState) -> tuple[Mode, int | str]:
         return Mode.ABSOLUTE, parse_number(token)
     except ValueError:
         return Mode.ABSOLUTE, token
+
+
+def preprocess(text: str) -> str:
+    lines = text.splitlines()
+    processed_lines = []
+
+    skip_stack = []
+    constants = {}
+
+    for line_no, raw_line in enumerate(lines, 1):
+        line = strip_comment(raw_line)
+        if not line:
+            if not skip_stack or not skip_stack[-1]:
+                processed_lines.append(raw_line)
+            continue
+
+        parts = line.split(None, 2)
+        directive = parts[0].lower()
+
+        if directive == ".if":
+            if len(parts) < 2:
+                raise ValueError(f"Missing condition for .if at line {line_no}")
+            cond_var = parts[1]
+            val = constants.get(cond_var, 0)
+            skip_stack.append(val == 0)
+            continue
+        elif directive == ".else":
+            if not skip_stack:
+                raise ValueError(f"Orphaned .else at line {line_no}")
+            skip_stack[-1] = not skip_stack[-1]
+            continue
+        elif directive == ".endif":
+            if not skip_stack:
+                raise ValueError(f"Orphaned .endif at line {line_no}")
+            skip_stack.pop()
+            continue
+        elif directive == ".equ":
+            if not skip_stack or not skip_stack[-1]:
+                sub_parts = line.split(None, 2)
+                if len(sub_parts) >= 3:
+                    name = sub_parts[1]
+                    try:
+                        val = parse_number(sub_parts[2])
+                        constants[name] = val
+                    except ValueError:
+                        pass
+                processed_lines.append(raw_line)
+            continue
+
+        if not skip_stack or not skip_stack[-1]:
+            processed_lines.append(raw_line)
+
+    lines = processed_lines
+    processed_lines = []
+    macros = {}
+    in_macro = False
+    current_macro_name = None
+    current_macro_lines = []
+
+    for line_no, raw_line in enumerate(lines, 1):
+        line = strip_comment(raw_line)
+        if not line:
+            if not in_macro:
+                processed_lines.append(raw_line)
+            continue
+
+        parts = line.split(None, 1)
+        directive = parts[0].lower()
+
+        if directive == ".macro":
+            if in_macro:
+                raise ValueError(f"Nested macros are not allowed at line {line_no}")
+            if len(parts) < 2:
+                raise ValueError(f"Missing macro name at line {line_no}")
+            in_macro = True
+            current_macro_name = parts[1].strip()
+            current_macro_lines = []
+            continue
+        elif directive == ".endmacro":
+            if not in_macro:
+                raise ValueError(f"Orphaned .endmacro at line {line_no}")
+            in_macro = False
+            macros[current_macro_name] = current_macro_lines
+            continue
+
+        if in_macro:
+            current_macro_lines.append(raw_line)
+        else:
+            line_to_check = line
+            label_prefix = ""
+            if ":" in line_to_check and not line_to_check.startswith(" ") and not line_to_check.startswith("\t"):
+                sub_parts = line_to_check.split(":", 1)
+                label_prefix = sub_parts[0].strip() + ":"
+                line_to_check = sub_parts[1].strip()
+
+            if line_to_check in macros:
+                expanded = list(macros[line_to_check])
+                if label_prefix:
+                    if expanded:
+                        expanded[0] = label_prefix + " " + expanded[0]
+                    else:
+                        expanded = [label_prefix]
+                processed_lines.extend(expanded)
+            else:
+                processed_lines.append(raw_line)
+
+    return "\n".join(processed_lines)
 
 
 def first_pass(text: str) -> ParserState:
@@ -147,7 +254,7 @@ def first_pass(text: str) -> ParserState:
 
         opcode, mode_override = MNEMONIC_TO_OPCODE_MODE[mnemonic]
 
-        if opcode in (Opcode.HALT, Opcode.RET, Opcode.NOT):
+        if opcode == Opcode.NOP:
             state.code.append(
                 {
                     "index": state.code_addr,
@@ -159,26 +266,14 @@ def first_pass(text: str) -> ParserState:
             state.code_addr += 1
         elif opcode == Opcode.SPECIAL:
             assert mode_override is not None
-            if mode_override in (Mode.JC, Mode.JNC):
-                mode, arg = parse_operand(operand_str, state)
-                state.code.append(
-                    {
-                        "index": state.code_addr,
-                        "opcode": opcode,
-                        "mode": mode_override,
-                        "arg": arg,
-                        "term": Term(line_no, 0, line),
-                    }
-                )
-            else:
-                state.code.append(
-                    {
-                        "index": state.code_addr,
-                        "opcode": opcode,
-                        "mode": mode_override,
-                        "term": Term(line_no, 0, line),
-                    }
-                )
+            state.code.append(
+                {
+                    "index": state.code_addr,
+                    "opcode": opcode,
+                    "mode": mode_override,
+                    "term": Term(line_no, 0, line),
+                }
+            )
             state.code_addr += 1
         else:
             mode, arg = parse_operand(operand_str, state)
@@ -243,12 +338,30 @@ def pad_code(code: list[dict]) -> list[dict]:
         if i in code_dict:
             padded.append(code_dict[i])
         else:
-            padded.append({"index": i, "opcode": Opcode.HALT, "mode": Mode.ABSOLUTE})
+            padded.append({"index": i, "opcode": Opcode.NOP, "mode": Mode.ABSOLUTE})
     return padded
 
 
 def translate(text: str) -> tuple[list[dict], list[tuple[int, int]]]:
+    text = preprocess(text)
     state = first_pass(text)
+    if "start" not in state.labels:
+        raise ValueError("Translation error: Mandatory entry point 'start:' label is missing!")
+
+    start_section, start_addr = state.labels["start"]
+    if start_section != ".text":
+        raise ValueError("Translation error: 'start:' label must be in the .text section!")
+
+    if start_addr > 0:
+        has_instr_at_zero = any(instr["index"] == 0 for instr in state.code)
+        if not has_instr_at_zero:
+            state.code.append({
+                "index": 0,
+                "opcode": Opcode.JMP,
+                "mode": Mode.ABSOLUTE,
+                "arg": "start",
+            })
+
     code, data = second_pass(state)
     data.sort(key=lambda x: x[0])
     code.sort(key=lambda x: x["index"])

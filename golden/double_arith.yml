@@ -1,6 +1,86 @@
 in:
   source: examples/double_arith.asm
-out: |
-  2 1
-
-ticks: 21
+ticks: 57
+out_stdout: 2 1
+out_code: |-
+  0 - 10000001 - load 0x01
+  1 - 30000003 - add 0x03
+  2 - 20000005 - store 0x05
+  3 - A0000008 - jc 0x08
+  4 - 10000000 - load 0x00
+  5 - 30000002 - add 0x02
+  6 - 20000004 - store 0x04
+  7 - 7000000C - jmp 0x0C
+  8 - 10000000 - load 0x00
+  9 - 30000002 - add 0x02
+  10 - F3000000 - inc
+  11 - 20000004 - store 0x04
+  12 - 20FFFFF2 - store 0xFFFFF2
+  13 - 11000020 - load 32
+  14 - 20FFFFF1 - store 0xFFFFF1
+  15 - 10000005 - load 0x05
+  16 - 20FFFFF2 - store 0xFFFFF2
+  17 - F7000000 - halt
+out_journal: |-
+  TICK:   0 PC:   0 | INSTR: -            | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:   1 PC:   1 | INSTR: load 0x01    | ACC:    -1 | PSW: Z=0 N=1 C=0 IEF=1
+  TICK:   2 PC:   1 | INSTR: load 0x01    | ACC:    -1 | PSW: Z=0 N=1 C=0 IEF=1
+  TICK:   3 PC:   1 | INSTR: load 0x01    | ACC:    -1 | PSW: Z=0 N=1 C=0 IEF=1
+  TICK:   4 PC:   1 | INSTR: load 0x01    | ACC:    -1 | PSW: Z=0 N=1 C=0 IEF=1
+  TICK:   5 PC:   1 | INSTR: load 0x01    | ACC:    -1 | PSW: Z=0 N=1 C=0 IEF=1
+  TICK:   6 PC:   2 | INSTR: add 0x03     | ACC:     1 | PSW: Z=0 N=0 C=1 IEF=1
+  TICK:   7 PC:   2 | INSTR: add 0x03     | ACC:     1 | PSW: Z=0 N=0 C=1 IEF=1
+  TICK:   8 PC:   2 | INSTR: add 0x03     | ACC:     1 | PSW: Z=0 N=0 C=1 IEF=1
+  TICK:   9 PC:   2 | INSTR: add 0x03     | ACC:     1 | PSW: Z=0 N=0 C=1 IEF=1
+  TICK:  10 PC:   2 | INSTR: add 0x03     | ACC:     1 | PSW: Z=0 N=0 C=1 IEF=1
+  TICK:  11 PC:   3 | INSTR: store 0x05   | ACC:     1 | PSW: Z=0 N=0 C=1 IEF=1
+  TICK:  12 PC:   3 | INSTR: store 0x05   | ACC:     1 | PSW: Z=0 N=0 C=1 IEF=1
+  TICK:  13 PC:   3 | INSTR: store 0x05   | ACC:     1 | PSW: Z=0 N=0 C=1 IEF=1
+  TICK:  14 PC:   3 | INSTR: store 0x05   | ACC:     1 | PSW: Z=0 N=0 C=1 IEF=1
+  TICK:  15 PC:   8 | INSTR: jc 0x08      | ACC:     1 | PSW: Z=0 N=0 C=1 IEF=1
+  TICK:  16 PC:   8 | INSTR: jc 0x08      | ACC:     1 | PSW: Z=0 N=0 C=1 IEF=1
+  TICK:  17 PC:   8 | INSTR: jc 0x08      | ACC:     1 | PSW: Z=0 N=0 C=1 IEF=1
+  TICK:  18 PC:   9 | INSTR: load 0x00    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  19 PC:   9 | INSTR: load 0x00    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  20 PC:   9 | INSTR: load 0x00    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  21 PC:   9 | INSTR: load 0x00    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  22 PC:   9 | INSTR: load 0x00    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  23 PC:  10 | INSTR: add 0x02     | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  24 PC:  10 | INSTR: add 0x02     | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  25 PC:  10 | INSTR: add 0x02     | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  26 PC:  10 | INSTR: add 0x02     | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  27 PC:  10 | INSTR: add 0x02     | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  28 PC:  11 | INSTR: inc          | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  29 PC:  11 | INSTR: inc          | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  30 PC:  11 | INSTR: inc          | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  31 PC:  12 | INSTR: store 0x04   | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  32 PC:  12 | INSTR: store 0x04   | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  33 PC:  12 | INSTR: store 0x04   | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  34 PC:  12 | INSTR: store 0x04   | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  output_num: '2' << 2
+  TICK:  35 PC:  13 | INSTR: store 0xFFFFF2 | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  36 PC:  13 | INSTR: store 0xFFFFF2 | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  37 PC:  13 | INSTR: store 0xFFFFF2 | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  38 PC:  13 | INSTR: store 0xFFFFF2 | ACC:     2 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  39 PC:  14 | INSTR: load 32      | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  40 PC:  14 | INSTR: load 32      | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  41 PC:  14 | INSTR: load 32      | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  42 PC:  14 | INSTR: load 32      | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  output: '2' << ' '
+  TICK:  43 PC:  15 | INSTR: store 0xFFFFF1 | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  44 PC:  15 | INSTR: store 0xFFFFF1 | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  45 PC:  15 | INSTR: store 0xFFFFF1 | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  46 PC:  15 | INSTR: store 0xFFFFF1 | ACC:    32 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  47 PC:  16 | INSTR: load 0x05    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  48 PC:  16 | INSTR: load 0x05    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  49 PC:  16 | INSTR: load 0x05    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  50 PC:  16 | INSTR: load 0x05    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  51 PC:  16 | INSTR: load 0x05    | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  output_num: '2 1' << 1
+  TICK:  52 PC:  17 | INSTR: store 0xFFFFF2 | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  53 PC:  17 | INSTR: store 0xFFFFF2 | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  54 PC:  17 | INSTR: store 0xFFFFF2 | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  55 PC:  17 | INSTR: store 0xFFFFF2 | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  56 PC:  18 | INSTR: halt         | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  TICK:  57 PC:  18 | INSTR: halt         | ACC:     1 | PSW: Z=0 N=0 C=0 IEF=1
+  output_buffer: '2 1'
