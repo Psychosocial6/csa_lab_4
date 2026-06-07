@@ -25,12 +25,14 @@ class Opcode(int, Enum):
     SPECIAL = 0xF
 
 
-class Mode(int, Enum):
+class AddressingMode(int, Enum):
     ABSOLUTE = 0x0
     IMMEDIATE = 0x1
     INDIRECT = 0x2
     RELATIVE = 0x3
 
+
+class SpecialOpcode(int, Enum):
     EI = 0x0
     DI = 0x1
     IRET = 0x2
@@ -49,24 +51,22 @@ DEFAULT_IVT_INPUT = 0x10
 
 Term = namedtuple("Term", ["line", "pos", "symbol"])
 
-_OPCODE_TO_BINARY: dict[Opcode, int] = {op: op.value for op in Opcode}
 _BINARY_TO_OPCODE: dict[int, Opcode] = {op.value: op for op in Opcode}
+_BINARY_TO_ADDRESSING_MODE: dict[int, AddressingMode] = {m.value: m for m in AddressingMode}
+_BINARY_TO_SPECIAL_OPCODE: dict[int, SpecialOpcode] = {s.value: s for s in SpecialOpcode}
 
-_MODE_TO_BINARY: dict[Mode, int] = {m: m.value for m in Mode}
-_BINARY_TO_MODE: dict[int, Mode] = {m.value: m for m in Mode}
-
-SPECIAL_MNEMONICS: dict[str, tuple[Opcode, Mode]] = {
-    "ei": (Opcode.SPECIAL, Mode.EI),
-    "di": (Opcode.SPECIAL, Mode.DI),
-    "iret": (Opcode.SPECIAL, Mode.IRET),
-    "inc": (Opcode.SPECIAL, Mode.INC),
-    "dec": (Opcode.SPECIAL, Mode.DEC),
-    "not": (Opcode.SPECIAL, Mode.NOT),
-    "ret": (Opcode.SPECIAL, Mode.RET),
-    "halt": (Opcode.SPECIAL, Mode.HALT),
+SPECIAL_MNEMONICS: dict[str, tuple[Opcode, SpecialOpcode]] = {
+    "ei": (Opcode.SPECIAL, SpecialOpcode.EI),
+    "di": (Opcode.SPECIAL, SpecialOpcode.DI),
+    "iret": (Opcode.SPECIAL, SpecialOpcode.IRET),
+    "inc": (Opcode.SPECIAL, SpecialOpcode.INC),
+    "dec": (Opcode.SPECIAL, SpecialOpcode.DEC),
+    "not": (Opcode.SPECIAL, SpecialOpcode.NOT),
+    "ret": (Opcode.SPECIAL, SpecialOpcode.RET),
+    "halt": (Opcode.SPECIAL, SpecialOpcode.HALT),
 }
 
-MNEMONIC_TO_OPCODE_MODE: dict[str, tuple[Opcode, Mode | None]] = {
+MNEMONIC_TO_OPCODE_MODE: dict[str, tuple[Opcode, AddressingMode | SpecialOpcode | None]] = {
     "nop": (Opcode.NOP, None),
     "load": (Opcode.LOAD, None),
     "store": (Opcode.STORE, None),
@@ -85,7 +85,7 @@ MNEMONIC_TO_OPCODE_MODE: dict[str, tuple[Opcode, Mode | None]] = {
     **{k: (v[0], v[1]) for k, v in SPECIAL_MNEMONICS.items()},
 }
 
-OPCODE_MODE_TO_MNEMONIC: dict[tuple[Opcode, Mode | None], str] = {
+OPCODE_MODE_TO_MNEMONIC: dict[tuple[Opcode, AddressingMode | SpecialOpcode | None], str] = {
     (Opcode.NOP, None): "nop",
     (Opcode.LOAD, None): "load",
     (Opcode.STORE, None): "store",
@@ -108,8 +108,11 @@ OPCODE_MODE_TO_MNEMONIC: dict[tuple[Opcode, Mode | None], str] = {
 def to_bytes(code: list[dict]) -> bytes:
     result = bytearray()
     for instr in code:
-        opcode = _OPCODE_TO_BINARY[instr["opcode"]]
-        mode = _MODE_TO_BINARY.get(instr.get("mode", Mode.ABSOLUTE), 0)
+        opcode = instr["opcode"]
+
+        default_mode = SpecialOpcode.HALT if opcode == Opcode.SPECIAL else AddressingMode.ABSOLUTE
+        mode = int(instr.get("mode", default_mode))
+
         arg = instr.get("arg", 0) & 0xFFFFFF
         word = (opcode << 28) | (mode << 24) | arg
         result.extend(struct.pack(">I", word))
@@ -121,9 +124,15 @@ def from_bytes(binary_code: bytes) -> list[dict]:
     for i in range(0, len(binary_code), 4):
         if i + 3 >= len(binary_code):
             break
-        word = struct.unpack(">I", binary_code[i : i + 4])[0]
+        word = struct.unpack(">I", binary_code[i: i + 4])[0]
         opcode = _BINARY_TO_OPCODE[(word >> 28) & 0xF]
-        mode = _BINARY_TO_MODE.get((word >> 24) & 0xF, Mode.ABSOLUTE)
+        mode_val = (word >> 24) & 0xF
+
+        if opcode == Opcode.SPECIAL:
+            mode: AddressingMode | SpecialOpcode = _BINARY_TO_SPECIAL_OPCODE.get(mode_val, SpecialOpcode.HALT)
+        else:
+            mode = _BINARY_TO_ADDRESSING_MODE.get(mode_val, AddressingMode.ABSOLUTE)
+
         arg = word & 0xFFFFFF
         if arg >= 0x800000:
             arg -= 0x1000000
@@ -140,7 +149,13 @@ def to_hex(code: list[dict]) -> str:
             break
         word = struct.unpack(">I", binary[i: i + 4])[0]
         opcode = _BINARY_TO_OPCODE[(word >> 28) & 0xF]
-        mode = _BINARY_TO_MODE.get((word >> 24) & 0xF, Mode.ABSOLUTE)
+        mode_val = (word >> 24) & 0xF
+
+        if opcode == Opcode.SPECIAL:
+            mode: AddressingMode | SpecialOpcode = _BINARY_TO_SPECIAL_OPCODE.get(mode_val, SpecialOpcode.HALT)
+        else:
+            mode = _BINARY_TO_ADDRESSING_MODE.get(mode_val, AddressingMode.ABSOLUTE)
+
         arg = word & 0xFFFFFF
         display_arg = arg
         if display_arg >= 0x800000:
@@ -151,8 +166,13 @@ def to_hex(code: list[dict]) -> str:
             mnemonic = OPCODE_MODE_TO_MNEMONIC.get((opcode, None), "???")
 
         if opcode not in (Opcode.NOP, Opcode.SPECIAL, Opcode.PUSH, Opcode.POP):
-            is_address = mode in (Mode.ABSOLUTE, Mode.INDIRECT) or opcode in (
-                Opcode.JMP, Opcode.JZ, Opcode.JN, Opcode.CALL, Opcode.JC, Opcode.JNC
+            is_address = mode in (AddressingMode.ABSOLUTE, AddressingMode.INDIRECT) or opcode in (
+                Opcode.JMP,
+                Opcode.JZ,
+                Opcode.JN,
+                Opcode.CALL,
+                Opcode.JC,
+                Opcode.JNC,
             )
 
             if is_address:
@@ -170,10 +190,18 @@ def to_hex(code: list[dict]) -> str:
         lines.append(f"{i // 4} - {word:08X} - {mnemonic}")
     return "\n".join(lines)
 
+
 def write_json(filename: str, code: list[dict]) -> None:
     buf: list[str] = []
     for instr in code:
-        entry = {"index": instr["index"], "opcode": instr["opcode"].name, "mode": instr.get("mode", Mode.ABSOLUTE).name}
+        opcode = instr["opcode"]
+        default_mode = SpecialOpcode.HALT if opcode == Opcode.SPECIAL else AddressingMode.ABSOLUTE
+        mode = instr.get("mode", default_mode)
+        entry = {
+            "index": instr["index"],
+            "opcode": opcode.name,
+            "mode": mode.name
+        }
         if "arg" in instr:
             entry["arg"] = instr["arg"]
         if "term" in instr:

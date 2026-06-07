@@ -4,17 +4,20 @@ import io
 import logging
 import os
 from pathlib import Path
+from typing import Any
+
 import pytest
 import yaml
 
-import translator
-import machine
 import isa
+import machine
+import translator
 
 GOLDEN_DIR = Path(__file__).parent / "golden"
 UPDATE_GOLDENS = os.environ.get("UPDATE_GOLDENS", "0") == "1"
 
-def str_presenter(dumper, data):
+
+def str_presenter(dumper: Any, data: str) -> Any:
     if "\n" in data:
         return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
     return dumper.represent_scalar("tag:yaml.org,2002:str", data)
@@ -23,44 +26,43 @@ def str_presenter(dumper, data):
 yaml.representer.SafeRepresenter.add_representer(str, str_presenter)
 
 
-def parse_interrupt_schedule(input_path: Path | None) -> list[tuple[int, str]]:
+def parse_interrupt_schedule_from_str(schedule_str: str | None) -> list[tuple[int, str]]:
     interrupt_schedule: list[tuple[int, str]] = []
-    if not input_path or not input_path.exists():
+    if not schedule_str:
         return interrupt_schedule
 
-    with open(input_path, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            parts = line.split(",")
-            tick_val = int(parts[0].strip())
-            char = parts[1].strip()
-            if len(char) > 1 and char.startswith('"') and char.endswith('"'):
-                char = char[1:-1]
-            decoded = []
-            i = 0
-            while i < len(char):
-                if char[i] == "\\" and i + 1 < len(char):
-                    esc = char[i + 1]
-                    if esc == "n":
-                        decoded.append("\n")
-                    elif esc == "t":
-                        decoded.append("\t")
-                    elif esc == "0":
-                        decoded.append("\x00")
-                    elif esc == "\\":
-                        decoded.append("\\")
-                    else:
-                        decoded.append(char[i])
-                        i += 1
-                        continue
-                    i += 2
+    for line in schedule_str.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split(",")
+        tick_val = int(parts[0].strip())
+        char = parts[1].strip()
+        if len(char) > 1 and char.startswith('"') and char.endswith('"'):
+            char = char[1:-1]
+        decoded = []
+        i = 0
+        while i < len(char):
+            if char[i] == "\\" and i + 1 < len(char):
+                esc = char[i + 1]
+                if esc == "n":
+                    decoded.append("\n")
+                elif esc == "t":
+                    decoded.append("\t")
+                elif esc == "0":
+                    decoded.append("\x00")
+                elif esc == "\\":
+                    decoded.append("\\")
                 else:
                     decoded.append(char[i])
                     i += 1
-            char = "".join(decoded)
-            interrupt_schedule.append((tick_val, char))
+                    continue
+                i += 2
+            else:
+                decoded.append(char[i])
+                i += 1
+        char = "".join(decoded)
+        interrupt_schedule.append((tick_val, char))
     return interrupt_schedule
 
 
@@ -73,17 +75,26 @@ def test_golden(golden_file: Path) -> None:
     with open(golden_file, encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
-    source_file = Path(config["in"]["source"])
-    input_file = Path(config["in"]["input"]) if config["in"].get("input") else None
+    if "in_source" in config:
+        source_code = config["in_source"]
+        stdin_str = config.get("in_stdin", "")
+    else:
+        source_file = Path(config["in"]["source"])
+        assert source_file.exists(), f"Source file {source_file} not found"
+        with open(source_file, encoding="utf-8") as f:
+            source_code = f.read()
 
-    assert source_file.exists(), f"Source file {source_file} not found"
-    with open(source_file, encoding="utf-8") as f:
-        source_code = f.read()
+        input_file = Path(config["in"]["input"]) if config["in"].get("input") else None
+        if input_file and input_file.exists():
+            with open(input_file, encoding="utf-8") as f:
+                stdin_str = f.read()
+        else:
+            stdin_str = ""
 
     code, data = translator.translate(source_code)
     actual_code_hex = isa.to_hex(code)
 
-    interrupt_schedule = parse_interrupt_schedule(input_file)
+    interrupt_schedule = parse_interrupt_schedule_from_str(stdin_str)
     memory_size = config.get("config", {}).get("memory_size", 1024)
     limit = config.get("config", {}).get("limit", 10000)
 
@@ -122,8 +133,10 @@ def test_golden(golden_file: Path) -> None:
 
     if UPDATE_GOLDENS:
         ordered_config = {
-            "in": config.get("in", {}),
+            "in_source": source_code,
         }
+        if stdin_str:
+            ordered_config["in_stdin"] = stdin_str
 
         if "config" in config:
             ordered_config["config"] = config["config"]

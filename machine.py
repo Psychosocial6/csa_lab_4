@@ -9,12 +9,13 @@ from isa import (
     DEFAULT_IVT_INPUT,
     INPUT_PORT,
     IVT_INPUT,
+    OPCODE_MODE_TO_MNEMONIC,
     OUTPUT_NUM_PORT,
     OUTPUT_PORT,
-    Mode,
+    AddressingMode,
+    SpecialOpcode,
     Opcode,
     from_bytes,
-    OPCODE_MODE_TO_MNEMONIC,
 )
 
 
@@ -23,7 +24,7 @@ class PS:
     Z: bool = False
     N: bool = False
     C: bool = False
-    IEF: bool = True
+    IEF: bool = False
 
     def update(self, value: int, carry: bool = False) -> None:
         self.Z = value == 0
@@ -44,18 +45,16 @@ class DataPath:
                 self.data_memory[addr] = val
         self.acc = 0
         self.sp = data_memory_size - 1
-        self.psw = PS()
-        self.psw.update(self.acc)
+        self.ps = PS()
+        self.ps.update(self.acc)
         self.input_port_value = 0
         self.output_buffer: list[str] = []
-        self._input_port_ready = False
-        self._input_port_char = "\0"
 
     def signal_latch_acc(self, value: int) -> None:
         self.acc = value & 0xFFFFFFFF
         if self.acc >= 0x80000000:
             self.acc -= 0x100000000
-        self.psw.update(self.acc)
+        self.ps.update(self.acc)
 
     def signal_rd(self, addr: int) -> int:
         addr = addr & 0xFFFFFF
@@ -99,7 +98,7 @@ class DataPath:
             raise OverflowError("Stack underflow")
         return self.signal_rd(self.sp)
 
-    def alu_op(self, operation: Opcode | Mode, operand: int) -> tuple[int, bool]:
+    def alu_op(self, operation: Opcode | SpecialOpcode, operand: int) -> tuple[int, bool]:
         result = self.acc
         carry = False
 
@@ -120,12 +119,12 @@ class DataPath:
                 result = self.acc & operand
             elif operation == Opcode.OR:
                 result = self.acc | operand
-        elif isinstance(operation, Mode):
-            if operation == Mode.INC:
+        elif isinstance(operation, SpecialOpcode):
+            if operation == SpecialOpcode.INC:
                 result = self.acc + 1
-            elif operation == Mode.DEC:
+            elif operation == SpecialOpcode.DEC:
                 result = self.acc - 1
-            elif operation == Mode.NOT:
+            elif operation == SpecialOpcode.NOT:
                 result = ~self.acc
 
         return result, carry
@@ -136,7 +135,8 @@ def format_instruction(instr: dict | None) -> str:
         return "-"
 
     opcode = instr["opcode"]
-    mode = instr.get("mode", Mode.ABSOLUTE)
+    default_mode = SpecialOpcode.HALT if opcode == Opcode.SPECIAL else AddressingMode.ABSOLUTE
+    mode = instr.get("mode", default_mode)
     arg = instr.get("arg", "")
 
     if opcode == Opcode.SPECIAL:
@@ -152,8 +152,13 @@ def format_instruction(instr: dict | None) -> str:
     if has_no_arg or arg == "":
         return mnemonic
 
-    is_address = mode in (Mode.ABSOLUTE, Mode.INDIRECT) or opcode in (
-        Opcode.JMP, Opcode.JZ, Opcode.JN, Opcode.CALL, Opcode.JC, Opcode.JNC
+    is_address = mode in (AddressingMode.ABSOLUTE, AddressingMode.INDIRECT) or opcode in (
+        Opcode.JMP,
+        Opcode.JZ,
+        Opcode.JN,
+        Opcode.CALL,
+        Opcode.JC,
+        Opcode.JNC,
     )
 
     if is_address:
@@ -171,12 +176,7 @@ def format_instruction(instr: dict | None) -> str:
 
 
 class ControlUnit:
-    def __init__(
-            self,
-            program: list[dict],
-            data_path: DataPath,
-            interrupt_schedule: list[tuple[int, str]],
-    ) -> None:
+    def __init__(self, program: list[dict], data_path: DataPath, interrupt_schedule: list[tuple[int, str]]) -> None:
         self.program = program
         self.pc = 0
         self.data_path = data_path
@@ -185,81 +185,79 @@ class ControlUnit:
         self.interrupt_index = 0
         self.in_interrupt = False
         self.halted = False
-
         self.current_instr: dict | None = None
         self.busy_ticks = 0
         self.irq_transition = False
         self._halt_pending = False
-        self.irq_pending = False  # Флаг запроса прерывания
-
-    def current_tick(self) -> int:
-        return self.tick
+        self.irq_pending = False
 
     def check_interrupt(self) -> bool:
-        return self.irq_pending and self.data_path.psw.IEF
+        return self.irq_pending and self.data_path.ps.IEF
 
     def get_instruction_cycles(self, instr: dict) -> int:
         opcode = instr["opcode"]
-        mode = instr.get("mode", Mode.ABSOLUTE)
+        default_mode = SpecialOpcode.HALT if opcode == Opcode.SPECIAL else AddressingMode.ABSOLUTE
+        mode = instr.get("mode", default_mode)
 
         if opcode == Opcode.NOP:
             return 2
 
         if opcode in (Opcode.LOAD, Opcode.ADD, Opcode.SUB, Opcode.AND, Opcode.OR):
-            if mode == Mode.IMMEDIATE:
+            if mode == AddressingMode.IMMEDIATE:
                 return 4
-            if mode == Mode.ABSOLUTE:
+            if mode == AddressingMode.ABSOLUTE:
                 return 5
-            if mode == Mode.INDIRECT:
+            if mode == AddressingMode.INDIRECT:
                 return 7
 
         if opcode == Opcode.STORE:
-            if mode == Mode.ABSOLUTE:
+            if mode == AddressingMode.ABSOLUTE:
                 return 4
-            if mode == Mode.INDIRECT:
+            if mode == AddressingMode.INDIRECT:
                 return 7
 
-        if opcode in (Opcode.JMP, Opcode.JZ, Opcode.JN, Opcode.CALL, Opcode.JC, Opcode.JNC):
-            return 3
+        if opcode in (Opcode.JMP, Opcode.JZ, Opcode.JN, Opcode.JC, Opcode.JNC):
+                return 3
+
+        if opcode == Opcode.CALL:
+            return 5
 
         if opcode == Opcode.PUSH:
             return 4
 
         if opcode == Opcode.POP:
-            return 5
+            return 6
 
         if opcode == Opcode.SPECIAL:
-            special_mode = instr.get("mode", Mode.ABSOLUTE)
-            if special_mode == Mode.HALT:
+            if mode == SpecialOpcode.HALT:
                 return 2
-            if special_mode in (Mode.EI, Mode.DI, Mode.INC, Mode.DEC, Mode.NOT):
+            if mode in (SpecialOpcode.EI, SpecialOpcode.DI, SpecialOpcode.INC, SpecialOpcode.DEC, SpecialOpcode.NOT):
                 return 3
-            if special_mode == Mode.RET:
-                return 5
-            if special_mode == Mode.IRET:
-                return 7
+            if mode == SpecialOpcode.RET:
+                return 6
+            if mode == SpecialOpcode.IRET:
+                return 10
 
         return 1
 
     def fetch_operand(self, instr: dict) -> int:
-        mode = instr.get("mode", Mode.ABSOLUTE)
+        mode = instr.get("mode", AddressingMode.ABSOLUTE)
         arg = int(instr.get("arg", 0))
         if arg >= 0x800000:
             arg -= 0x1000000
-        if mode == Mode.IMMEDIATE:
+        if mode == AddressingMode.IMMEDIATE:
             return arg
-        if mode == Mode.ABSOLUTE:
+        if mode == AddressingMode.ABSOLUTE:
             return self.data_path.signal_rd(arg)
-        if mode == Mode.INDIRECT:
+        if mode == AddressingMode.INDIRECT:
             ptr = self.data_path.signal_rd(arg)
             return self.data_path.signal_rd(ptr)
-        if mode == Mode.RELATIVE:
-            return arg
         return arg
 
     def execute_instruction(self, instr: dict) -> None:
         opcode = instr["opcode"]
-        mode = instr.get("mode", Mode.ABSOLUTE)
+        default_mode = SpecialOpcode.HALT if opcode == Opcode.SPECIAL else AddressingMode.ABSOLUTE
+        mode = instr.get("mode", default_mode)
         arg = int(instr.get("arg", 0))
         if arg >= 0x800000:
             arg -= 0x1000000
@@ -276,7 +274,7 @@ class ControlUnit:
             return
 
         if opcode == Opcode.STORE:
-            addr = arg if mode != Mode.INDIRECT else self.data_path.signal_rd(arg)
+            addr = arg if mode != AddressingMode.INDIRECT else self.data_path.signal_rd(arg)
             self.data_path.signal_wr(addr, self.data_path.acc)
             return
 
@@ -284,7 +282,7 @@ class ControlUnit:
             operand = self.fetch_operand(instr)
             result, carry = self.data_path.alu_op(opcode, operand)
             self.data_path.signal_latch_acc(result)
-            self.data_path.psw.C = carry
+            self.data_path.ps.C = carry
             return
 
         if opcode == Opcode.PUSH:
@@ -296,39 +294,39 @@ class ControlUnit:
             return
 
         if opcode == Opcode.JC:
-            if self.data_path.psw.C:
-                if mode == Mode.RELATIVE:
+            if self.data_path.ps.C:
+                if mode == AddressingMode.RELATIVE:
                     self.pc = next_pc + arg
                 else:
                     self.pc = arg
             return
 
         if opcode == Opcode.JNC:
-            if not self.data_path.psw.C:
-                if mode == Mode.RELATIVE:
+            if not self.data_path.ps.C:
+                if mode == AddressingMode.RELATIVE:
                     self.pc = next_pc + arg
                 else:
                     self.pc = arg
             return
 
         if opcode == Opcode.JMP:
-            if mode == Mode.RELATIVE:
+            if mode == AddressingMode.RELATIVE:
                 self.pc = next_pc + arg
             else:
                 self.pc = arg
             return
 
         if opcode == Opcode.JZ:
-            if self.data_path.psw.Z:
-                if mode == Mode.RELATIVE:
+            if self.data_path.ps.Z:
+                if mode == AddressingMode.RELATIVE:
                     self.pc = next_pc + arg
                 else:
                     self.pc = arg
             return
 
         if opcode == Opcode.JN:
-            if self.data_path.psw.N:
-                if mode == Mode.RELATIVE:
+            if self.data_path.ps.N:
+                if mode == AddressingMode.RELATIVE:
                     self.pc = next_pc + arg
                 else:
                     self.pc = arg
@@ -336,39 +334,37 @@ class ControlUnit:
 
         if opcode == Opcode.CALL:
             self.data_path.signal_push(next_pc)
-            if mode == Mode.RELATIVE:
+            if mode == AddressingMode.RELATIVE:
                 self.pc = next_pc + arg
             else:
                 self.pc = arg
             return
 
         if opcode == Opcode.SPECIAL:
-            special_mode = instr.get("mode", Mode.ABSOLUTE)
-            if special_mode == Mode.HALT:
+            if mode == SpecialOpcode.HALT:
                 self._halt_pending = True
-                return
-            elif special_mode == Mode.EI:
-                self.data_path.psw.IEF = True
-            elif special_mode == Mode.DI:
-                self.data_path.psw.IEF = False
-            elif special_mode == Mode.IRET:
+            elif mode == SpecialOpcode.EI:
+                self.data_path.ps.IEF = True
+            elif mode == SpecialOpcode.DI:
+                self.data_path.ps.IEF = False
+            elif mode == SpecialOpcode.IRET:
                 flags = self.data_path.signal_pop()
                 self.pc = self.data_path.signal_pop()
-                self.data_path.psw.Z = bool(flags & 1)
-                self.data_path.psw.N = bool(flags & 2)
-                self.data_path.psw.C = bool(flags & 4)
-                self.data_path.psw.IEF = True
+                self.data_path.ps.Z = bool(flags & 1)
+                self.data_path.ps.N = bool(flags & 2)
+                self.data_path.ps.C = bool(flags & 4)
+                self.data_path.ps.IEF = True
                 self.in_interrupt = False
-            elif special_mode == Mode.INC:
-                result, _ = self.data_path.alu_op(special_mode, 0)
+            elif mode == SpecialOpcode.INC:
+                result, _ = self.data_path.alu_op(mode, 0)
                 self.data_path.signal_latch_acc(result)
-            elif special_mode == Mode.DEC:
-                result, _ = self.data_path.alu_op(special_mode, 0)
+            elif mode == SpecialOpcode.DEC:
+                result, _ = self.data_path.alu_op(mode, 0)
                 self.data_path.signal_latch_acc(result)
-            elif special_mode == Mode.NOT:
-                result, _ = self.data_path.alu_op(special_mode, 0)
+            elif mode == SpecialOpcode.NOT:
+                result, _ = self.data_path.alu_op(mode, 0)
                 self.data_path.signal_latch_acc(result)
-            elif special_mode == Mode.RET:
+            elif mode == SpecialOpcode.RET:
                 self.pc = self.data_path.signal_pop()
                 self.in_interrupt = False
             return
@@ -376,10 +372,10 @@ class ControlUnit:
     def process_next_tick(self) -> None:
         self.tick += 1
 
-        # Изменено строгое равенство (==) на нестрогое (<=)
         arrived_char = None
-        while (self.interrupt_index < len(self.interrupt_schedule) and
-               self.interrupt_schedule[self.interrupt_index][0] <= self.tick):
+        while (self.interrupt_index < len(self.interrupt_schedule)
+            and self.interrupt_schedule[self.interrupt_index][0] <= self.tick
+        ):
             arrived_char = self.interrupt_schedule[self.interrupt_index][1]
             self.interrupt_index += 1
 
@@ -388,7 +384,6 @@ class ControlUnit:
             self.irq_pending = True
             logging.debug("INPUT PORT OVERWRITE at tick %d: char=%s", self.tick, repr(arrived_char))
 
-        # 2. Если процессор выполняет текущую инструкцию
         if self.busy_ticks > 0:
             self.busy_ticks -= 1
             if self.busy_ticks == 0:
@@ -398,28 +393,22 @@ class ControlUnit:
                     self.irq_transition = False
             return
 
-        # 3. Обработка прерывания
         if self.check_interrupt():
             self.irq_pending = False
             logging.debug("INTERRUPT TRIGGERED at tick %d", self.tick)
-
             resume_pc = self.pc
-            flags_val = int(self.data_path.psw.Z) | (int(self.data_path.psw.N) << 1) | (
-                        int(self.data_path.psw.C) << 2)
+            flags_val = int(self.data_path.ps.Z) | (int(self.data_path.ps.N) << 1) | (int(self.data_path.ps.C) << 2)
             self.data_path.signal_push(resume_pc)
             self.data_path.signal_push(flags_val)
-
             ivt_addr = self.data_path.signal_rd(IVT_INPUT)
             self.pc = ivt_addr
-
-            self.data_path.psw.IEF = False
+            self.data_path.ps.IEF = False
             self.in_interrupt = True
             self.current_instr = None
             self.irq_transition = True
-            self.busy_ticks = 3 - 1
+            self.busy_ticks = 2
             return
 
-        # 4. Выполнение следующей инструкции
         if self.pc < len(self.program):
             instr = self.program[self.pc]
             self.current_instr = instr
@@ -438,20 +427,15 @@ class ControlUnit:
         state_repr = (
             f"TICK: {self.tick:3} PC: {self.pc:3} | "
             f"INSTR: {instr_str:<12} | "
-            f"ACC: {self.data_path.acc:5} | PSW: {self.data_path.psw}"
+            f"ACC: {self.data_path.acc:5} | PSW: {self.data_path.ps}"
         )
         if self.in_interrupt:
             state_repr += " [IRQ]"
         return state_repr
 
 
-def simulation(
-        code: list[dict],
-        data: list[tuple[int, int]],
-        interrupt_schedule: list[tuple[int, str]],
-        data_memory_size: int = 1024,
-        limit: int = 10000,
-) -> tuple[str, int]:
+def simulation(code: list[dict], data: list[tuple[int, int]], interrupt_schedule: list[tuple[int, str]],
+    data_memory_size: int = 1024, limit: int = 10000) -> tuple[str, int]:
     data_path = DataPath(data_memory_size, data)
     control_unit = ControlUnit(code, data_path, interrupt_schedule)
 
@@ -478,8 +462,6 @@ def main(code_file: str, input_file: str | None = None) -> None:
 
     data: list[tuple[int, int]] = []
     data_json = code_file + ".data.json"
-    if input_file is not None:
-        data_json = code_file + ".data.json"
     try:
         with open(data_json, encoding="utf-8") as f:
             raw = json.load(f)

@@ -7,7 +7,8 @@ from dataclasses import dataclass, field
 
 from isa import (
     MNEMONIC_TO_OPCODE_MODE,
-    Mode,
+    AddressingMode,
+    SpecialOpcode,
     Opcode,
     Term,
     to_bytes,
@@ -37,32 +38,32 @@ def parse_number(token: str) -> int:
     return int(token)
 
 
-def parse_operand(token: str, state: ParserState) -> tuple[Mode, int | str]:
+def parse_operand(token: str, state: ParserState) -> tuple[AddressingMode, int | str]:
     token = token.strip()
     if token.startswith("#"):
         inner = token[1:].strip()
         try:
-            return Mode.IMMEDIATE, parse_number(inner)
+            return AddressingMode.IMMEDIATE, parse_number(inner)
         except ValueError:
-            return Mode.IMMEDIATE, inner
+            return AddressingMode.IMMEDIATE, inner
     if token.startswith("[") and token.endswith("]"):
         inner = token[1:-1].strip()
-        return Mode.INDIRECT, inner
+        return AddressingMode.INDIRECT, inner
     if token.startswith("@"):
         inner = token[1:].strip()
-        return Mode.RELATIVE, inner
+        return AddressingMode.RELATIVE, inner
     try:
-        return Mode.ABSOLUTE, parse_number(token)
+        return AddressingMode.ABSOLUTE, parse_number(token)
     except ValueError:
-        return Mode.ABSOLUTE, token
+        return AddressingMode.ABSOLUTE, token
 
 
 def preprocess(text: str) -> str:
     lines = text.splitlines()
     processed_lines = []
 
-    skip_stack = []
-    constants = {}
+    skip_stack: list[bool] = []
+    constants: dict[str, int] = {}
 
     for line_no, raw_line in enumerate(lines, 1):
         line = strip_comment(raw_line)
@@ -81,17 +82,17 @@ def preprocess(text: str) -> str:
             val = constants.get(cond_var, 0)
             skip_stack.append(val == 0)
             continue
-        elif directive == ".else":
+        if directive == ".else":
             if not skip_stack:
                 raise ValueError(f"Orphaned .else at line {line_no}")
             skip_stack[-1] = not skip_stack[-1]
             continue
-        elif directive == ".endif":
+        if directive == ".endif":
             if not skip_stack:
                 raise ValueError(f"Orphaned .endif at line {line_no}")
             skip_stack.pop()
             continue
-        elif directive == ".equ":
+        if directive == ".equ":
             if not skip_stack or not skip_stack[-1]:
                 sub_parts = line.split(None, 2)
                 if len(sub_parts) >= 3:
@@ -112,7 +113,7 @@ def preprocess(text: str) -> str:
     macros = {}
     in_macro = False
     current_macro_name = None
-    current_macro_lines = []
+    current_macro_lines: list[str] = []
 
     for line_no, raw_line in enumerate(lines, 1):
         line = strip_comment(raw_line)
@@ -133,7 +134,7 @@ def preprocess(text: str) -> str:
             current_macro_name = parts[1].strip()
             current_macro_lines = []
             continue
-        elif directive == ".endmacro":
+        if directive == ".endmacro":
             if not in_macro:
                 raise ValueError(f"Orphaned .endmacro at line {line_no}")
             in_macro = False
@@ -259,7 +260,7 @@ def first_pass(text: str) -> ParserState:
                 {
                     "index": state.code_addr,
                     "opcode": opcode,
-                    "mode": Mode.ABSOLUTE,
+                    "mode": AddressingMode.ABSOLUTE,
                     "term": Term(line_no, 0, line),
                 }
             )
@@ -320,7 +321,7 @@ def second_pass(state: ParserState) -> tuple[list[dict], list[tuple[int, int]]]:
             arg = new_instr["arg"]
             if isinstance(arg, str):
                 arg = resolve_value(arg, state, new_instr["index"])
-            if new_instr["mode"] == Mode.RELATIVE:
+            if new_instr["mode"] == AddressingMode.RELATIVE:
                 arg = arg - (new_instr["index"] + 1)
             new_instr["arg"] = arg & 0xFFFFFF
         resolved_code.append(new_instr)
@@ -338,7 +339,7 @@ def pad_code(code: list[dict]) -> list[dict]:
         if i in code_dict:
             padded.append(code_dict[i])
         else:
-            padded.append({"index": i, "opcode": Opcode.NOP, "mode": Mode.ABSOLUTE})
+            padded.append({"index": i, "opcode": Opcode.NOP, "mode": AddressingMode.ABSOLUTE})
     return padded
 
 
@@ -355,12 +356,14 @@ def translate(text: str) -> tuple[list[dict], list[tuple[int, int]]]:
     if start_addr > 0:
         has_instr_at_zero = any(instr["index"] == 0 for instr in state.code)
         if not has_instr_at_zero:
-            state.code.append({
-                "index": 0,
-                "opcode": Opcode.JMP,
-                "mode": Mode.ABSOLUTE,
-                "arg": "start",
-            })
+            state.code.append(
+                {
+                    "index": 0,
+                    "opcode": Opcode.JMP,
+                    "mode": AddressingMode.ABSOLUTE,
+                    "arg": "start",
+                }
+            )
 
     code, data = second_pass(state)
     data.sort(key=lambda x: x[0])

@@ -1,6 +1,26 @@
-in:
-  source: examples/cat.asm
-  input: examples/cat_input.txt
+in_source: |
+  .equ OUTPUT_PORT 0xFFFFF1
+  .equ INPUT_PORT  0xFFFFF0
+
+  .section .text
+
+  .org 0x10
+  handler:
+      LOAD INPUT_PORT
+      STORE OUTPUT_PORT
+      IRET
+
+  start:
+      EI
+
+  loop:
+      JMP loop
+in_stdin: |-
+  50,H
+  100,e
+  150,l
+  200,l
+  250,o
 ticks: 10000
 out_stdout: Hello
 out_code: |-
@@ -26,10 +46,10 @@ out_code: |-
   19 - F0000000 - ei
   20 - 70000014 - jmp 0x14
 out_journal: |-
-  TICK:   0 PC:   0 | INSTR: -            | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK:   1 PC:  19 | INSTR: jmp 0x13     | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK:   2 PC:  19 | INSTR: jmp 0x13     | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK:   3 PC:  19 | INSTR: jmp 0x13     | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:   0 PC:   0 | INSTR: -            | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=0
+  TICK:   1 PC:  19 | INSTR: jmp 0x13     | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=0
+  TICK:   2 PC:  19 | INSTR: jmp 0x13     | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=0
+  TICK:   3 PC:  19 | INSTR: jmp 0x13     | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=0
   TICK:   4 PC:  20 | INSTR: ei           | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
   TICK:   5 PC:  20 | INSTR: ei           | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
   TICK:   6 PC:  20 | INSTR: ei           | ACC:     0 | PSW: Z=1 N=0 C=0 IEF=1
@@ -100,9 +120,9 @@ out_journal: |-
   TICK:  68 PC:  20 | INSTR: iret         | ACC:    72 | PSW: Z=1 N=0 C=0 IEF=1
   TICK:  69 PC:  20 | INSTR: iret         | ACC:    72 | PSW: Z=1 N=0 C=0 IEF=1
   TICK:  70 PC:  20 | INSTR: iret         | ACC:    72 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK:  71 PC:  20 | INSTR: jmp 0x14     | ACC:    72 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK:  72 PC:  20 | INSTR: jmp 0x14     | ACC:    72 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK:  73 PC:  20 | INSTR: jmp 0x14     | ACC:    72 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:  71 PC:  20 | INSTR: iret         | ACC:    72 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:  72 PC:  20 | INSTR: iret         | ACC:    72 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK:  73 PC:  20 | INSTR: iret         | ACC:    72 | PSW: Z=1 N=0 C=0 IEF=1
   TICK:  74 PC:  20 | INSTR: jmp 0x14     | ACC:    72 | PSW: Z=1 N=0 C=0 IEF=1
   TICK:  75 PC:  20 | INSTR: jmp 0x14     | ACC:    72 | PSW: Z=1 N=0 C=0 IEF=1
   TICK:  76 PC:  20 | INSTR: jmp 0x14     | ACC:    72 | PSW: Z=1 N=0 C=0 IEF=1
@@ -152,9 +172,9 @@ out_journal: |-
   TICK: 117 PC:  20 | INSTR: iret         | ACC:   101 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 118 PC:  20 | INSTR: iret         | ACC:   101 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 119 PC:  20 | INSTR: iret         | ACC:   101 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK: 120 PC:  20 | INSTR: jmp 0x14     | ACC:   101 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK: 121 PC:  20 | INSTR: jmp 0x14     | ACC:   101 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK: 122 PC:  20 | INSTR: jmp 0x14     | ACC:   101 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 120 PC:  20 | INSTR: iret         | ACC:   101 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 121 PC:  20 | INSTR: iret         | ACC:   101 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 122 PC:  20 | INSTR: iret         | ACC:   101 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 123 PC:  20 | INSTR: jmp 0x14     | ACC:   101 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 124 PC:  20 | INSTR: jmp 0x14     | ACC:   101 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 125 PC:  20 | INSTR: jmp 0x14     | ACC:   101 | PSW: Z=1 N=0 C=0 IEF=1
@@ -204,9 +224,9 @@ out_journal: |-
   TICK: 166 PC:  20 | INSTR: iret         | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 167 PC:  20 | INSTR: iret         | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 168 PC:  20 | INSTR: iret         | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK: 169 PC:  20 | INSTR: jmp 0x14     | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK: 170 PC:  20 | INSTR: jmp 0x14     | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK: 171 PC:  20 | INSTR: jmp 0x14     | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 169 PC:  20 | INSTR: iret         | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 170 PC:  20 | INSTR: iret         | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 171 PC:  20 | INSTR: iret         | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 172 PC:  20 | INSTR: jmp 0x14     | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 173 PC:  20 | INSTR: jmp 0x14     | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 174 PC:  20 | INSTR: jmp 0x14     | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
@@ -259,9 +279,9 @@ out_journal: |-
   TICK: 218 PC:  20 | INSTR: iret         | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 219 PC:  20 | INSTR: iret         | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 220 PC:  20 | INSTR: iret         | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK: 221 PC:  20 | INSTR: jmp 0x14     | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK: 222 PC:  20 | INSTR: jmp 0x14     | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK: 223 PC:  20 | INSTR: jmp 0x14     | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 221 PC:  20 | INSTR: iret         | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 222 PC:  20 | INSTR: iret         | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 223 PC:  20 | INSTR: iret         | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 224 PC:  20 | INSTR: jmp 0x14     | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 225 PC:  20 | INSTR: jmp 0x14     | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 226 PC:  20 | INSTR: jmp 0x14     | ACC:   108 | PSW: Z=1 N=0 C=0 IEF=1
@@ -311,9 +331,9 @@ out_journal: |-
   TICK: 267 PC:  20 | INSTR: iret         | ACC:   111 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 268 PC:  20 | INSTR: iret         | ACC:   111 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 269 PC:  20 | INSTR: iret         | ACC:   111 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK: 270 PC:  20 | INSTR: jmp 0x14     | ACC:   111 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK: 271 PC:  20 | INSTR: jmp 0x14     | ACC:   111 | PSW: Z=1 N=0 C=0 IEF=1
-  TICK: 272 PC:  20 | INSTR: jmp 0x14     | ACC:   111 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 270 PC:  20 | INSTR: iret         | ACC:   111 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 271 PC:  20 | INSTR: iret         | ACC:   111 | PSW: Z=1 N=0 C=0 IEF=1
+  TICK: 272 PC:  20 | INSTR: iret         | ACC:   111 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 273 PC:  20 | INSTR: jmp 0x14     | ACC:   111 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 274 PC:  20 | INSTR: jmp 0x14     | ACC:   111 | PSW: Z=1 N=0 C=0 IEF=1
   TICK: 275 PC:  20 | INSTR: jmp 0x14     | ACC:   111 | PSW: Z=1 N=0 C=0 IEF=1
