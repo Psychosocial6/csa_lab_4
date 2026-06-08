@@ -18,7 +18,7 @@ loop:
     JZ done
     STORE OUTPUT_PORT
     LOAD str_addr
-    INC
+    ADD #4
     STORE str_addr
     JMP loop
 

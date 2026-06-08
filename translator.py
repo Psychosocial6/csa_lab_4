@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
@@ -228,9 +229,9 @@ def first_pass(text: str) -> ParserState:
                 addr = state.data_addr
                 for ch in decoded:
                     state.data.append((addr, ord(ch)))
-                    addr += 1
+                    addr += 4
                 state.data.append((addr, 0))
-                addr += 1
+                addr += 4
                 state.data_addr = addr
             elif directive == ".word":
                 for token in rest.split(","):
@@ -240,7 +241,7 @@ def first_pass(text: str) -> ParserState:
                     except ValueError:
                         val = token
                     state.data.append((state.data_addr, val))
-                    state.data_addr += 1
+                    state.data_addr += 4
             continue
 
         if not line:
@@ -264,7 +265,7 @@ def first_pass(text: str) -> ParserState:
                     "term": Term(line_no, 0, line),
                 }
             )
-            state.code_addr += 1
+            state.code_addr += 4
         elif opcode == Opcode.SPECIAL:
             assert mode_override is not None
             state.code.append(
@@ -275,7 +276,7 @@ def first_pass(text: str) -> ParserState:
                     "term": Term(line_no, 0, line),
                 }
             )
-            state.code_addr += 1
+            state.code_addr += 4
         else:
             parsed_mode, arg = parse_operand(operand_str)
             mode: AddressingMode | SpecialOpcode = mode_override if mode_override is not None else parsed_mode
@@ -288,7 +289,7 @@ def first_pass(text: str) -> ParserState:
                     "term": Term(line_no, 0, line),
                 }
             )
-            state.code_addr += 1
+            state.code_addr += 4
 
     return state
 
@@ -321,7 +322,7 @@ def second_pass(state: ParserState) -> tuple[list[dict], list[tuple[int, int]]]:
             if isinstance(arg, str):
                 arg = resolve_value(arg, state)
             if new_instr["mode"] == AddressingMode.RELATIVE:
-                arg = arg - (new_instr["index"] + 1)
+                arg = arg - (new_instr["index"] + 4)
             new_instr["arg"] = arg & 0xFFFFFF
         resolved_code.append(new_instr)
 
@@ -334,7 +335,7 @@ def pad_code(code: list[dict]) -> list[dict]:
     max_index = max(instr["index"] for instr in code)
     code_dict = {instr["index"]: instr for instr in code}
     padded: list[dict] = []
-    for i in range(max_index + 1):
+    for i in range(0, max_index + 4, 4):
         if i in code_dict:
             padded.append(code_dict[i])
         else:
@@ -362,22 +363,16 @@ def translate(text: str) -> tuple[list[dict], list[tuple[int, int]], int]:
 def main(source: str, target: str) -> None:
     with open(source, encoding="utf-8") as f:
         text = f.read()
-
     code, data, start_addr = translate(text)
     binary_code = to_bytes(code, start_addr)
     hex_code = to_hex(code)
-
     os.makedirs(os.path.dirname(os.path.abspath(target)) or ".", exist_ok=True)
     with open(target, "wb") as f:
         f.write(binary_code)
     with open(target + ".hex", "w", encoding="utf-8") as f:
         f.write(hex_code)
-
-    import json
-
     with open(target + ".data.json", "w", encoding="utf-8") as f:
         json.dump({"data": data}, f)
-
     print(f"source LoC: {len(text.splitlines())} code instr: {len(code)} data words: {len(data)}")
 
 

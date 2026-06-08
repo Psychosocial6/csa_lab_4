@@ -24,7 +24,7 @@ handler:
     JZ done_isr
     STORE [name_ptr]
     LOAD name_ptr
-    INC
+    ADD #4
     STORE name_ptr
     IRET
 
@@ -66,7 +66,7 @@ ps_loop:
     JZ ps_done
     STORE OUTPUT_PORT
     LOAD ptr
-    INC
+    ADD #4
     STORE ptr
     JMP ps_loop
 

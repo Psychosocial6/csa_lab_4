@@ -41,9 +41,15 @@ class DataPath:
         self.data_memory = [0] * data_memory_size
         for addr, val in initial_data:
             if 0 <= addr < data_memory_size:
-                self.data_memory[addr] = val
+                self.data_memory[addr] = val & 0xFF
+                if addr + 1 < data_memory_size:
+                    self.data_memory[addr + 1] = (val >> 8) & 0xFF
+                if addr + 2 < data_memory_size:
+                    self.data_memory[addr + 2] = (val >> 16) & 0xFF
+                if addr + 3 < data_memory_size:
+                    self.data_memory[addr + 3] = (val >> 24) & 0xFF
         self.acc = 0
-        self.sp = data_memory_size - 1
+        self.sp = data_memory_size - 4
         self.ps = PS()
         self.ps.update(self.acc)
         self.input_port_value = 0
@@ -65,7 +71,14 @@ class DataPath:
         if addr == IVT_INPUT:
             return DEFAULT_IVT_INPUT
         if 0 <= addr < self.data_memory_size:
-            return self.data_memory[addr]
+            val = self.data_memory[addr]
+            if addr + 1 < self.data_memory_size:
+                val |= self.data_memory[addr + 1] << 8
+            if addr + 2 < self.data_memory_size:
+                val |= self.data_memory[addr + 2] << 16
+            if addr + 3 < self.data_memory_size:
+                val |= self.data_memory[addr + 3] << 24
+            return val
         return 0
 
     def signal_wr(self, addr: int, value: int) -> None:
@@ -77,17 +90,24 @@ class DataPath:
             self.output_port_value = value
             self._output_written = True
             return
+
         if 0 <= addr < self.data_memory_size:
-            self.data_memory[addr] = value
+            self.data_memory[addr] = value & 0xFF
+            if addr + 1 < self.data_memory_size:
+                self.data_memory[addr + 1] = (value >> 8) & 0xFF
+            if addr + 2 < self.data_memory_size:
+                self.data_memory[addr + 2] = (value >> 16) & 0xFF
+            if addr + 3 < self.data_memory_size:
+                self.data_memory[addr + 3] = (value >> 24) & 0xFF
 
     def signal_push(self, value: int) -> None:
         self.signal_wr(self.sp, value)
-        self.sp -= 1
+        self.sp -= 4
         if self.sp < 0:
             raise OverflowError("Stack overflow")
 
     def signal_pop(self) -> int:
-        self.sp += 1
+        self.sp += 4
         if self.sp >= self.data_memory_size:
             raise OverflowError("Stack underflow")
         return self.signal_rd(self.sp)
@@ -264,21 +284,21 @@ class ControlUnit:
             arg -= 0x1000000
 
         total_cycles = self.get_instruction_cycles(instr)
-        next_pc = instr["index"] + 1
+        next_pc = instr["index"] + 4
 
         if cycle == 1:
             self.pc = next_pc
 
         if opcode == Opcode.SPECIAL and mode == SpecialOpcode.IRET:
             if cycle == 2:
-                self.data_path.sp += 1
+                self.data_path.sp += 4
             elif cycle == 5:
                 flags = self.data_path.signal_rd(self.data_path.sp)
                 self.data_path.ps.Z = bool(flags & 1)
                 self.data_path.ps.N = bool(flags & 2)
                 self.data_path.ps.C = bool(flags & 4)
             elif cycle == 6:
-                self.data_path.sp += 1
+                self.data_path.sp += 4
             elif cycle == 9:
                 self.pc = self.data_path.signal_rd(self.data_path.sp)
                 self.data_path.ps.IEF = True
@@ -287,7 +307,7 @@ class ControlUnit:
 
         if opcode == Opcode.POP:
             if cycle == 2:
-                self.data_path.sp += 1
+                self.data_path.sp += 4
             elif cycle == 5:
                 val = self.data_path.signal_rd(self.data_path.sp)
                 self.data_path.signal_latch_acc(val)
@@ -300,7 +320,7 @@ class ControlUnit:
 
         if opcode == Opcode.SPECIAL and mode == SpecialOpcode.RET:
             if cycle == 2:
-                self.data_path.sp += 1
+                self.data_path.sp += 4
             elif cycle == 5:
                 self.pc = self.data_path.signal_rd(self.data_path.sp)
                 self.in_interrupt = False
@@ -455,7 +475,6 @@ class ControlUnit:
             self.irq_flags_val = (
                 int(self.data_path.ps.Z) | (int(self.data_path.ps.N) << 1) | (int(self.data_path.ps.C) << 2)
             )
-
             self.irq_ivt_addr = self.data_path.signal_rd(IVT_INPUT)
             self.current_instr = None
             self.irq_transition = True
@@ -464,8 +483,8 @@ class ControlUnit:
             self._track_register_changes(old_acc, old_pc, old_sp, old_z, old_n, old_c, old_ief)
             return
 
-        if self.pc < len(self.program):
-            instr = self.program[self.pc]
+        if (self.pc // 4) < len(self.program):
+            instr = self.program[self.pc // 4]
             self.current_instr = instr
             self.current_instruction_name = format_instruction(instr)
             cycles = self.get_instruction_cycles(instr)

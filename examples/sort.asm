@@ -24,6 +24,8 @@ outer_loop:
     JZ outer_done
     LOAD #0
     STORE j
+    LOAD #array
+    STORE ptr
 
 inner_loop:
     LOAD j
@@ -31,10 +33,8 @@ inner_loop:
     ADD #1
     ADD i
     JZ inner_done
-    LOAD #array
-    ADD j
-    STORE ptr
-    INC
+    LOAD ptr
+    ADD #4
     STORE ptr2
     LOAD [ptr]
     STORE temp
@@ -53,6 +53,9 @@ no_swap:
     LOAD j
     INC
     STORE j
+    LOAD ptr
+    ADD #4
+    STORE ptr
     JMP inner_loop
 
 inner_done:
@@ -74,7 +77,7 @@ pa_loop:
     JZ pa_done
     STORE OUTPUT_PORT
     LOAD ptr
-    INC
+    ADD #4
     STORE ptr
     JMP pa_loop
 

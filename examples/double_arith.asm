@@ -1,7 +1,6 @@
 .equ OUTPUT_PORT 0xFFFFF1
 .equ INPUT_PORT  0xFFFFF0
 .equ IVT_INPUT   0xFFFFF2
-.equ PRINT_SPACE 1
 
 .section .data
 a_high: .word 0
@@ -20,7 +19,7 @@ handler:
     LOAD INPUT_PORT
     STORE [input_ptr]
     LOAD input_ptr
-    INC
+    ADD #4
     STORE input_ptr
     LOAD input_count
     INC
