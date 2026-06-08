@@ -124,7 +124,7 @@ def from_bytes(binary_code: bytes) -> tuple[list[dict], int]:
     for i in range(4, len(binary_code), 4):
         if i + 3 >= len(binary_code):
             break
-        word = struct.unpack(">I", binary_code[i: i + 4])[0]
+        word = struct.unpack(">I", binary_code[i : i + 4])[0]
         opcode = _BINARY_TO_OPCODE[(word >> 28) & 0xF]
         mode_val = (word >> 24) & 0xF
 
@@ -147,7 +147,7 @@ def to_hex(code: list[dict]) -> str:
     for i in range(0, len(binary), 4):
         if i + 3 >= len(binary):
             break
-        word = struct.unpack(">I", binary[i: i + 4])[0]
+        word = struct.unpack(">I", binary[i : i + 4])[0]
         opcode = _BINARY_TO_OPCODE[(word >> 28) & 0xF]
         mode_val = (word >> 24) & 0xF
 

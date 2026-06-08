@@ -63,6 +63,7 @@ def parse_interrupt_value(token: str) -> int:
             f"numbers must be raw integers (e.g. 42)."
         ) from e
 
+
 def parse_interrupt_schedule_from_str(schedule_str: str | None) -> list[tuple[int, int]]:
     interrupt_schedule: list[tuple[int, int]] = []
     if not schedule_str:
@@ -131,7 +132,7 @@ def test_golden(golden_file: Path) -> None:
             data_memory_size=memory_size,
             limit=limit,
             start_addr=start_addr,
-            output_format=output_format
+            output_format=output_format,
         )
     finally:
         root_logger.removeHandler(log_handler)

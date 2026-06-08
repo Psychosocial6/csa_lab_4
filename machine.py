@@ -170,8 +170,9 @@ def format_instruction(instr: dict | None) -> str:
 
 
 class ControlUnit:
-    def __init__(self, program: list[dict], data_path: DataPath, interrupt_schedule: list[tuple[int, int]],
-                 start_addr: int = 0) -> None:
+    def __init__(
+        self, program: list[dict], data_path: DataPath, interrupt_schedule: list[tuple[int, int]], start_addr: int = 0
+    ) -> None:
         self.program = program
         self.pc = start_addr
         self.data_path = data_path
@@ -407,8 +408,9 @@ class ControlUnit:
         self.tick += 1
         arrived_val = None
 
-        while (self.interrupt_index < len(self.interrupt_schedule)
-               and self.interrupt_schedule[self.interrupt_index][0] <= self.tick
+        while (
+            self.interrupt_index < len(self.interrupt_schedule)
+            and self.interrupt_schedule[self.interrupt_index][0] <= self.tick
         ):
             arrived_val = self.interrupt_schedule[self.interrupt_index][1]
             self.interrupt_index += 1
@@ -450,8 +452,9 @@ class ControlUnit:
             self.irq_pending = False
             logging.debug("INTERRUPT TRIGGERED at tick %d", self.tick)
             self.irq_resume_pc = self.pc
-            self.irq_flags_val = int(self.data_path.ps.Z) | (int(self.data_path.ps.N) << 1) | (
-                    int(self.data_path.ps.C) << 2)
+            self.irq_flags_val = (
+                int(self.data_path.ps.Z) | (int(self.data_path.ps.N) << 1) | (int(self.data_path.ps.C) << 2)
+            )
 
             self.irq_ivt_addr = self.data_path.signal_rd(IVT_INPUT)
             self.current_instr = None
@@ -479,8 +482,9 @@ class ControlUnit:
             self.halted = True
         self._track_register_changes(old_acc, old_pc, old_sp, old_z, old_n, old_c, old_ief)
 
-    def _track_register_changes(self, old_acc: int, old_pc: int, old_sp: int,
-                                old_z: bool, old_n: bool, old_c: bool, old_ief: bool) -> None:
+    def _track_register_changes(
+        self, old_acc: int, old_pc: int, old_sp: int, old_z: bool, old_n: bool, old_c: bool, old_ief: bool
+    ) -> None:
         changes = []
         if self.data_path.acc != old_acc:
             changes.append(f"ACC: {old_acc} -> {self.data_path.acc}")
@@ -517,9 +521,16 @@ class ControlUnit:
         state_repr += self.current_changes
         return state_repr
 
-def simulation(code: list[dict], data: list[tuple[int, int]], interrupt_schedule: list[tuple[int, int]],
-               data_memory_size: int = 1024, limit: int = 10000, start_addr: int = 0, output_format: str = "char") -> \
-tuple[str, int]:
+
+def simulation(
+    code: list[dict],
+    data: list[tuple[int, int]],
+    interrupt_schedule: list[tuple[int, int]],
+    data_memory_size: int = 1024,
+    limit: int = 10000,
+    start_addr: int = 0,
+    output_format: str = "char",
+) -> tuple[str, int]:
     data_path = DataPath(data_memory_size, data)
     control_unit = ControlUnit(code, data_path, interrupt_schedule, start_addr)
     output_buffer: list[int] = []
@@ -555,6 +566,7 @@ tuple[str, int]:
 
     logging.info("output_buffer: %s", repr(stdout))
     return stdout, control_unit.tick
+
 
 def parse_interrupt_value(token: str) -> int:
     token = token.strip()
@@ -633,10 +645,18 @@ def main(code_file: str, input_file: str | None = None, output_format: str = "ch
         except FileNotFoundError:
             pass
 
-    output, ticks = simulation(code, data, interrupt_schedule, data_memory_size=1024, limit=10000,
-                               start_addr=start_addr, output_format=output_format)
+    output, ticks = simulation(
+        code,
+        data,
+        interrupt_schedule,
+        data_memory_size=1024,
+        limit=10000,
+        start_addr=start_addr,
+        output_format=output_format,
+    )
     print(output)
     print("ticks:", ticks)
+
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
