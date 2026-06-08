@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "arch-lab4"
+name = "csa-lab4"
 version = "0.1.0"
-description = "Computer Architecture Lab 4: asm | acc | harv | hw | tick | binary | trap | mem | cstr | alg2 | pipeline"
-authors = ["Student"]
+description = "csa lab 4: asm | acc | harv | hw | tick | binary | trap | mem | cstr | alg2 | pipeline"
+authors = ["Andrey Zykov"]
 package-mode = false
 
 [tool.poetry.dependencies]

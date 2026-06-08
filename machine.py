@@ -652,7 +652,6 @@ def main(code_file: str, input_file: str | None = None, output_format: str = "ch
         with open(data_json, encoding="utf-8") as f:
             raw = json.load(f)
             data = [(d[0], d[1]) for d in raw.get("data", [])]
-            start_addr = raw.get("start_addr", 0)
     except FileNotFoundError:
         pass
 

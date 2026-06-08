@@ -136,7 +136,7 @@ def from_bytes(binary_code: bytes) -> tuple[list[dict], int]:
         arg = word & 0xFFFFFF
         if arg >= 0x800000:
             arg -= 0x1000000
-        instr: dict = {"index": (i - 4) // 4, "opcode": opcode, "mode": mode, "arg": arg}
+        instr: dict = {"index": i - 4, "opcode": opcode, "mode": mode, "arg": arg}
         structured.append(instr)
     return structured, start_addr
 
