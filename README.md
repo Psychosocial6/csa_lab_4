@@ -130,7 +130,7 @@
 | 0x0004 : y: .word 0          |
 | 0x0008 : msg: .string "Hi"   | -> 0x0008: 'H', 0x000C: 'i', 0x0010: \0
 | ...                          |
-| 0x03FF : DataMem[SP]         | начало стека
+| 0x03FC : DataMem[SP]         | начало стека
 | ...                          |
 | 0xFFFFF0 : input port        |
 | 0xFFFFF1 : output port       |
@@ -193,7 +193,7 @@
   * Все процедуры размещаются в памяти команд.
   * Вызов процедуры выполняется инструкцией `CALL` при этом значение `PC + 1` сохраняется в стек, а в `PC` записывается адрес начала подпрограммы.
   * Возврат из процедуры выполняется инструкцией `RET`, адрес возврата извлекается из стека и записывается в `PC`.
-  * Изначально `SP` указывает на последнюю ячейку памяти, при добавлении в стек `SP` уменьшается на 1.
+  * Изначально `SP` указывает на последнюю ячейку памяти, при добавлении в стек `SP` уменьшается на 4.
 
 - **Прерывания:**
   * Обработчик прерываний располагается по адресу, указанному в векторе прерывания (`0x10`), в памяти инструкций.
@@ -237,18 +237,18 @@
 | Инструкция | OPCODE (hex) | MODE (hex) | Полный цикл исполнения (тактов) | Режимы адресации    | Операнд | Семантика                                              |
 |------------|--------------|------------|---------------------------------|---------------------|---------|--------------------------------------------------------|
 | `NOP`      | `0x0`        | `0x0`      | 1                               | –                   | –       | Нет операции                                           | 
-| `LOAD`     | `0x1`        | *          | 4(`Abs`), 3(`Imm`), 6(`Ind`)          | `Abs`, `Imm`, `Ind` | `<op>`  | `ACC = <op>`                                           |
-| `STORE`    | `0x2`        | *          | 3(`Abs`), 6(`Ind`)                  | `Abs`, `Ind`        | `<op>`  | `DataMemory[<op>] = ACC`                               |
-| `ADD`      | `0x3`        | *          | 4(`Abs`), 3(`Imm`), 6(`Ind`)          | `Abs`, `Imm`, `Ind` | `<op>`  | `ACC = ACC + <op>`; set `Z, N, C`                      |
-| `SUB`      | `0x4`        | *          | 4(`Abs`), 3(`Imm`), 6(`Ind`)          | `Abs`, `Imm`, `Ind` | `<op>`  | `ACC = ACC - <op>`; set `Z, N, C`                      |
-| `AND`      | `0x5`        | *          | 4(`Abs`), 3(`Imm`), 6(`Ind`)          | `Abs`, `Imm`, `Ind` | `<op>`  | `ACC = ACC & <op>`; set `Z, N`                         |
-| `OR`       | `0x6`        | *          | 4(`Abs`), 3(`Imm`), 6(`Ind`)          | `Abs`, `Imm`, `Ind` | `<op>`  | `ACC = ACC \| <op>`; set `Z, N`                        |
-| `JMP`      | `0x7`        | *          | 2(`Abs`), 2(`Rel`)                  | `Abs`, `Rel`        | `<op>`  | `PC = <op>`                                            |
-| `JZ`       | `0x8`        | *          | 2(`Abs`), 2(`Rel`)                  | `Abs`, `Rel`        | `<op>`  | `PC = <op>`, если `Z == 1`                             |
-| `JN`       | `0x9`        | *          | 2(`Abs`), 2(`Rel`)                  | `Abs`, `Rel`        | `<op>`  | `PC = <op>`, если `N == 1`                             |
-| `JC`       | `0xA`        | *          | 2(`Abs`), 2(`Rel`)                  | `Abs`, `Rel`        | `<op>`  | `PC = <op>`, если `C == 1`                             |
-| `JNC`      | `0xB`        | *          | 2(`Abs`), 2(`Rel`)                  | `Abs`, `Rel`        | `<op>`  | `PC = <op>`, если `C == 0`                             |
-| `CALL`     | `0xC`        | *          | 3(`Abs`), 3(`Rel`)                  | `Abs`, `Rel`        | `<op>`  | `PUSH(PC+1)`; `PC = <op>`                              |
+| `LOAD`     | `0x1`        | *          | 4(`Abs`), 3(`Imm`), 6(`Ind`)    | `Abs`, `Imm`, `Ind` | `<op>`  | `ACC = <op>`                                           |
+| `STORE`    | `0x2`        | *          | 3(`Abs`), 6(`Ind`)              | `Abs`, `Ind`        | `<op>`  | `DataMemory[<op>] = ACC`                               |
+| `ADD`      | `0x3`        | *          | 4(`Abs`), 3(`Imm`), 6(`Ind`)    | `Abs`, `Imm`, `Ind` | `<op>`  | `ACC = ACC + <op>`; set `Z, N, C`                      |
+| `SUB`      | `0x4`        | *          | 4(`Abs`), 3(`Imm`), 6(`Ind`)    | `Abs`, `Imm`, `Ind` | `<op>`  | `ACC = ACC - <op>`; set `Z, N, C`                      |
+| `AND`      | `0x5`        | *          | 4(`Abs`), 3(`Imm`), 6(`Ind`)    | `Abs`, `Imm`, `Ind` | `<op>`  | `ACC = ACC & <op>`; set `Z, N`                         |
+| `OR`       | `0x6`        | *          | 4(`Abs`), 3(`Imm`), 6(`Ind`)    | `Abs`, `Imm`, `Ind` | `<op>`  | `ACC = ACC \| <op>`; set `Z, N`                        |
+| `JMP`      | `0x7`        | *          | 2(`Abs`), 2(`Rel`)              | `Abs`, `Rel`        | `<op>`  | `PC = <op>`                                            |
+| `JZ`       | `0x8`        | *          | 2(`Abs`), 2(`Rel`)              | `Abs`, `Rel`        | `<op>`  | `PC = <op>`, если `Z == 1`                             |
+| `JN`       | `0x9`        | *          | 2(`Abs`), 2(`Rel`)              | `Abs`, `Rel`        | `<op>`  | `PC = <op>`, если `N == 1`                             |
+| `JC`       | `0xA`        | *          | 2(`Abs`), 2(`Rel`)              | `Abs`, `Rel`        | `<op>`  | `PC = <op>`, если `C == 1`                             |
+| `JNC`      | `0xB`        | *          | 2(`Abs`), 2(`Rel`)              | `Abs`, `Rel`        | `<op>`  | `PC = <op>`, если `C == 0`                             |
+| `CALL`     | `0xC`        | *          | 3(`Abs`), 3(`Rel`)              | `Abs`, `Rel`        | `<op>`  | `PUSH(PC+1)`; `PC = <op>`                              |
 | `PUSH`     | `0xD`        | –          | 3                               | –                   | –       | `DataMemory[SP] = ACC`; `SP--`                         |
 | `POP`      | `0xE`        | –          | 5                               | –                   | –       | `SP++`, `ACC = DataMemory[SP]`                         |
 | `EI`       | `0xF`        | `0x0`      | 2                               | –                   | –       | `IEF = 1`                                              |
@@ -284,8 +284,6 @@
 - ```<target.bin>.hex``` - текстовый файл в формате ```<address> - <HEX> - <мнемоника>```
 - ```<target.bin>.data.json``` - файл в формате JSON, содержит начальные данные (секция ```.data```)
 
-
-
 **Транслятор выполняет обработку в 3 прохода:**
 - **1-й проход:** Препроцессинг. Во время прохода осуществляется сбор значений констант `.equ` для использования в блоках условной компиляции, все вызовы макросов заменяются инструкциями, определенными в их теле, обрабатывается условная компиляция, все неиспользуемые строки удаляются 
 - **2-й проход:** Обработка и сохранение меток, сохранение констант (директива ```.equ```), обработка секций (```.data```, ```.text```), создание основы программы
@@ -300,7 +298,7 @@
 
 **Аргументы:**
 - ```code.bin``` - путь к бинарному файлу с машинным кодом
-- ```input_schedule.txt``` - путь к текстовому файлу с с расписанием прерываний
+- ```input_schedule.txt``` - путь к текстовому файлу с расписанием прерываний
 - ```output_format``` - интерпретация вывода: как символы или как числа
 
 Процессор разделен на **Control Unit** и **Data Path**.
@@ -387,46 +385,57 @@
 - Для проверки типизации используется `mypy`
 
 Запуск автоматического тестирования: ```poetry run pytest -v ```
+
 Обновление конфигурации тестов: ```$env:UPDATE_GOLDENS="1"; poetry run pytest; $env:UPDATE_GOLDENS="0"```
+
+Ручной запуск проверок:
+- **Форматирование:**  
+  `poetry run ruff format --check .` - проверить форматирование.  
+  `poetry run ruff format .` - автоматически исправить форматирование.  
+- **Линтинг:**  
+  `poetry run ruff check . --fix` - автоматически исправить ошибки и предупреждения.  
+- **Типизация:**  
+  `poetry run mypy .` - проверить корректность типов.  
+
+Все команды запускаются из корня проекта (с активированным виртуальным окружением Poetry).
 
 Пример ручного запуска программы (первые и последние такты):
 ```
 > python translator.py examples/hello.asm hello.bin 
-> python machine.py hello.bin
+> python machine.py hello.bin char 
 
-DEBUG:root:TICK:   1 PC:   1 | INSTR: load 0         | ACC:     0 | SP: 0x03FF| PS: Z=1 N=0 C=0 IEF=0 | PC: 0 -> 1
-DEBUG:root:TICK:   2 PC:   1 | INSTR: load 0         | ACC:     0 | SP: 0x03FF| PS: Z=1 N=0 C=0 IEF=0
-DEBUG:root:TICK:   3 PC:   1 | INSTR: load 0         | ACC:     0 | SP: 0x03FF| PS: Z=1 N=0 C=0 IEF=0
-DEBUG:root:TICK:   4 PC:   2 | INSTR: call 0x03      | ACC:     0 | SP: 0x03FF| PS: Z=1 N=0 C=0 IEF=0 | PC: 1 -> 2
-DEBUG:root:TICK:   5 PC:   2 | INSTR: call 0x03      | ACC:     0 | SP: 0x03FF| PS: Z=1 N=0 C=0 IEF=0
-DEBUG:root:TICK:   6 PC:   3 | INSTR: call 0x03      | ACC:     0 | SP: 0x03FE| PS: Z=1 N=0 C=0 IEF=0 | PC: 2 -> 3, SP: 0x03FF -> 0x03FE
-DEBUG:root:TICK:   7 PC:   4 | INSTR: store 0x0F     | ACC:     0 | SP: 0x03FE| PS: Z=1 N=0 C=0 IEF=0 | PC: 3 -> 4
-DEBUG:root:TICK:   8 PC:   4 | INSTR: store 0x0F     | ACC:     0 | SP: 0x03FE| PS: Z=1 N=0 C=0 IEF=0
-DEBUG:root:TICK:   9 PC:   4 | INSTR: store 0x0F     | ACC:     0 | SP: 0x03FE| PS: Z=1 N=0 C=0 IEF=0
-DEBUG:root:TICK:  10 PC:   5 | INSTR: load 0x0F      | ACC:     0 | SP: 0x03FE| PS: Z=1 N=0 C=0 IEF=0 | PC: 4 -> 5
-DEBUG:root:TICK:  11 PC:   5 | INSTR: load 0x0F      | ACC:     0 | SP: 0x03FE| PS: Z=1 N=0 C=0 IEF=0
-DEBUG:root:TICK:  12 PC:   5 | INSTR: load 0x0F      | ACC:     0 | SP: 0x03FE| PS: Z=1 N=0 C=0 IEF=0
-DEBUG:root:TICK:  13 PC:   5 | INSTR: load 0x0F      | ACC:     0 | SP: 0x03FE| PS: Z=1 N=0 C=0 IEF=0
-DEBUG:root:TICK:  14 PC:   5 | INSTR: load 0x0F      | ACC:     0 | SP: 0x03FE| PS: Z=1 N=0 C=0 IEF=0
-DEBUG:root:TICK:  15 PC:   5 | INSTR: load 0x0F      | ACC:    72 | SP: 0x03FE| PS: Z=0 N=0 C=0 IEF=0 | ACC: 0 -> 72, PS: Z: 1 -> 0
-DEBUG:root:TICK:  16 PC:   6 | INSTR: jz 0x0B        | ACC:    72 | SP: 0x03FE| PS: Z=0 N=0 C=0 IEF=0 | PC: 5 -> 6
-DEBUG:root:TICK:  17 PC:   6 | INSTR: jz 0x0B        | ACC:    72 | SP: 0x03FE| PS: Z=0 N=0 C=0 IEF=0
-DEBUG:root:TICK:  18 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    72 | SP: 0x03FE| PS: Z=0 N=0 C=0 IEF=0 | PC: 6 -> 7
-DEBUG:root:TICK:  19 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    72 | SP: 0x03FE| PS: Z=0 N=0 C=0 IEF=0
-DEBUG:root:TICK:  20 PC:   7 | INSTR: store 0xFFFFF1 | ACC:    72 | SP: 0x03FE| PS: Z=0 N=0 C=0 IEF=0
+DEBUG:root:TICK:   1 PC:   4 | INSTR: load 0         | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=0 | PC: 0 -> 4
+DEBUG:root:TICK:   2 PC:   4 | INSTR: load 0         | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=0
+DEBUG:root:TICK:   3 PC:   4 | INSTR: load 0         | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=0
+DEBUG:root:TICK:   4 PC:   8 | INSTR: call 0x0C      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=0 | PC: 4 -> 8
+DEBUG:root:TICK:   5 PC:   8 | INSTR: call 0x0C      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=0
+DEBUG:root:TICK:   6 PC:  12 | INSTR: call 0x0C      | ACC:     0 | SP: 0x03F8| PS: Z=1 N=0 C=0 IEF=0 | PC: 8 -> 12, SP: 0x03FC -> 0x03F8
+DEBUG:root:TICK:   7 PC:  16 | INSTR: store 0x3C     | ACC:     0 | SP: 0x03F8| PS: Z=1 N=0 C=0 IEF=0 | PC: 12 -> 16
+DEBUG:root:TICK:   8 PC:  16 | INSTR: store 0x3C     | ACC:     0 | SP: 0x03F8| PS: Z=1 N=0 C=0 IEF=0
+DEBUG:root:TICK:   9 PC:  16 | INSTR: store 0x3C     | ACC:     0 | SP: 0x03F8| PS: Z=1 N=0 C=0 IEF=0
+DEBUG:root:TICK:  10 PC:  20 | INSTR: load 0x3C      | ACC:     0 | SP: 0x03F8| PS: Z=1 N=0 C=0 IEF=0 | PC: 16 -> 20
+DEBUG:root:TICK:  11 PC:  20 | INSTR: load 0x3C      | ACC:     0 | SP: 0x03F8| PS: Z=1 N=0 C=0 IEF=0
+DEBUG:root:TICK:  12 PC:  20 | INSTR: load 0x3C      | ACC:     0 | SP: 0x03F8| PS: Z=1 N=0 C=0 IEF=0
+DEBUG:root:TICK:  13 PC:  20 | INSTR: load 0x3C      | ACC:     0 | SP: 0x03F8| PS: Z=1 N=0 C=0 IEF=0
+DEBUG:root:TICK:  14 PC:  20 | INSTR: load 0x3C      | ACC:     0 | SP: 0x03F8| PS: Z=1 N=0 C=0 IEF=0
+DEBUG:root:TICK:  15 PC:  20 | INSTR: load 0x3C      | ACC:    72 | SP: 0x03F8| PS: Z=0 N=0 C=0 IEF=0 | ACC: 0 -> 72, PS: Z: 1 -> 0
+DEBUG:root:TICK:  16 PC:  24 | INSTR: jz 0x2C        | ACC:    72 | SP: 0x03F8| PS: Z=0 N=0 C=0 IEF=0 | PC: 20 -> 24
+DEBUG:root:TICK:  17 PC:  24 | INSTR: jz 0x2C        | ACC:    72 | SP: 0x03F8| PS: Z=0 N=0 C=0 IEF=0
+DEBUG:root:TICK:  18 PC:  28 | INSTR: store 0xFFFFF1 | ACC:    72 | SP: 0x03F8| PS: Z=0 N=0 C=0 IEF=0 | PC: 24 -> 28
+DEBUG:root:TICK:  19 PC:  28 | INSTR: store 0xFFFFF1 | ACC:    72 | SP: 0x03F8| PS: Z=0 N=0 C=0 IEF=0
+DEBUG:root:TICK:  20 PC:  28 | INSTR: store 0xFFFFF1 | ACC:    72 | SP: 0x03F8| PS: Z=0 N=0 C=0 IEF=0
 DEBUG:root:output: '' << 'H'
 
 ...
 
-DEBUG:root:TICK: 326 PC:  12 | INSTR: ret            | ACC:     0 | SP: 0x03FE| PS: Z=1 N=0 C=0 IEF=0 | PC: 11 -> 12
-DEBUG:root:TICK: 327 PC:  12 | INSTR: ret            | ACC:     0 | SP: 0x03FF| PS: Z=1 N=0 C=0 IEF=0 | SP: 0x03FE -> 0x03FF
-DEBUG:root:TICK: 328 PC:  12 | INSTR: ret            | ACC:     0 | SP: 0x03FF| PS: Z=1 N=0 C=0 IEF=0
-DEBUG:root:TICK: 329 PC:  12 | INSTR: ret            | ACC:     0 | SP: 0x03FF| PS: Z=1 N=0 C=0 IEF=0
-DEBUG:root:TICK: 330 PC:   2 | INSTR: ret            | ACC:     0 | SP: 0x03FF| PS: Z=1 N=0 C=0 IEF=0 | PC: 12 -> 2
-DEBUG:root:TICK: 331 PC:   3 | INSTR: halt           | ACC:     0 | SP: 0x03FF| PS: Z=1 N=0 C=0 IEF=0 | PC: 2 -> 3
+DEBUG:root:TICK: 340 PC:  48 | INSTR: ret            | ACC:     0 | SP: 0x03F8| PS: Z=1 N=0 C=0 IEF=0 | PC: 44 -> 48
+DEBUG:root:TICK: 341 PC:  48 | INSTR: ret            | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=0 | SP: 0x03F8 -> 0x03FC
+DEBUG:root:TICK: 342 PC:  48 | INSTR: ret            | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=0
+DEBUG:root:TICK: 343 PC:  48 | INSTR: ret            | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=0
+DEBUG:root:TICK: 344 PC:   8 | INSTR: ret            | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=0 | PC: 48 -> 8
+DEBUG:root:TICK: 345 PC:  12 | INSTR: halt           | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=0 | PC: 8 -> 12
 INFO:root:output_buffer: 'Hello, World!\n'
 Hello, World!
 
-ticks: 331
-
+ticks: 345
 ```
