@@ -672,6 +672,7 @@ def main(code_file: str, input_file: str | None = None, output_format: str = "ch
         start_addr=start_addr,
         output_format=output_format,
     )
+
     print(output)
     print("ticks:", ticks)
 
