@@ -1,13 +1,7 @@
 .equ OUTPUT_PORT 0xFFFFF1
-.equ OUTPUT_NUM_PORT 0xFFFFF2
 .equ INPUT_PORT  0xFFFFF0
-.equ IVT_INPUT   0xFFFFF3
+.equ IVT_INPUT   0xFFFFF2
 .equ PRINT_SPACE 1
-
-.macro PRINT_SPACE_CHAR
-    LOAD #32
-    STORE OUTPUT_PORT
-.endmacro
 
 .section .data
 a_high: .word 0
@@ -24,7 +18,6 @@ input_done: .word 0
 .org 0x10
 handler:
     LOAD INPUT_PORT
-    SUB #48
     STORE [input_ptr]
     LOAD input_ptr
     INC
@@ -70,10 +63,7 @@ low_carry:
     STORE r_high
 
 print_res:
-    STORE OUTPUT_NUM_PORT
-.if PRINT_SPACE
-    PRINT_SPACE_CHAR
-.endif
+    STORE OUTPUT_PORT
     LOAD r_low
-    STORE OUTPUT_NUM_PORT
+    STORE OUTPUT_PORT
     HALT

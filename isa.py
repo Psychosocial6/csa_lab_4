@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import struct
 from collections import namedtuple
 from enum import Enum
@@ -45,8 +44,7 @@ class SpecialOpcode(int, Enum):
 
 INPUT_PORT = 0xFFFFF0
 OUTPUT_PORT = 0xFFFFF1
-OUTPUT_NUM_PORT = 0xFFFFF2
-IVT_INPUT = 0xFFFFF3
+IVT_INPUT = 0xFFFFF2
 DEFAULT_IVT_INPUT = 0x10
 
 Term = namedtuple("Term", ["line", "pos", "symbol"])
@@ -105,8 +103,9 @@ OPCODE_MODE_TO_MNEMONIC: dict[tuple[Opcode, AddressingMode | SpecialOpcode | Non
 }
 
 
-def to_bytes(code: list[dict]) -> bytes:
+def to_bytes(code: list[dict], start_addr: int = 0) -> bytes:
     result = bytearray()
+    result.extend(struct.pack(">I", start_addr))
     for instr in code:
         opcode = instr["opcode"]
 
@@ -119,9 +118,10 @@ def to_bytes(code: list[dict]) -> bytes:
     return bytes(result)
 
 
-def from_bytes(binary_code: bytes) -> list[dict]:
+def from_bytes(binary_code: bytes) -> tuple[list[dict], int]:
     structured: list[dict] = []
-    for i in range(0, len(binary_code), 4):
+    start_addr = struct.unpack(">I", binary_code[0:4])[0]
+    for i in range(4, len(binary_code), 4):
         if i + 3 >= len(binary_code):
             break
         word = struct.unpack(">I", binary_code[i: i + 4])[0]
@@ -136,13 +136,13 @@ def from_bytes(binary_code: bytes) -> list[dict]:
         arg = word & 0xFFFFFF
         if arg >= 0x800000:
             arg -= 0x1000000
-        instr: dict = {"index": i // 4, "opcode": opcode, "mode": mode, "arg": arg}
+        instr: dict = {"index": (i - 4) // 4, "opcode": opcode, "mode": mode, "arg": arg}
         structured.append(instr)
-    return structured
+    return structured, start_addr
 
 
 def to_hex(code: list[dict]) -> str:
-    binary = to_bytes(code)
+    binary = to_bytes(code)[4:]
     lines: list[str] = []
     for i in range(0, len(binary), 4):
         if i + 3 >= len(binary):
@@ -189,23 +189,3 @@ def to_hex(code: list[dict]) -> str:
 
         lines.append(f"{i // 4} - {word:08X} - {mnemonic}")
     return "\n".join(lines)
-
-
-def write_json(filename: str, code: list[dict]) -> None:
-    buf: list[str] = []
-    for instr in code:
-        opcode = instr["opcode"]
-        default_mode = SpecialOpcode.HALT if opcode == Opcode.SPECIAL else AddressingMode.ABSOLUTE
-        mode = instr.get("mode", default_mode)
-        entry = {
-            "index": instr["index"],
-            "opcode": opcode.name,
-            "mode": mode.name
-        }
-        if "arg" in instr:
-            entry["arg"] = instr["arg"]
-        if "term" in instr:
-            entry["term"] = instr["term"]
-        buf.append(json.dumps(entry))
-    with open(filename, "w", encoding="utf-8") as f:
-        f.write("[" + ",\n ".join(buf) + "]")

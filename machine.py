@@ -10,11 +10,10 @@ from isa import (
     INPUT_PORT,
     IVT_INPUT,
     OPCODE_MODE_TO_MNEMONIC,
-    OUTPUT_NUM_PORT,
     OUTPUT_PORT,
     AddressingMode,
-    SpecialOpcode,
     Opcode,
+    SpecialOpcode,
     from_bytes,
 )
 
@@ -48,7 +47,8 @@ class DataPath:
         self.ps = PS()
         self.ps.update(self.acc)
         self.input_port_value = 0
-        self.output_buffer: list[str] = []
+        self.output_port_value = 0
+        self._output_written = False
 
     def signal_latch_acc(self, value: int) -> None:
         self.acc = value & 0xFFFFFFFF
@@ -74,15 +74,9 @@ class DataPath:
         if value >= 0x80000000:
             value -= 0x100000000
         if addr == OUTPUT_PORT:
-            char = chr(value & 0xFF)
-            logging.debug("output: %s << %s", repr("".join(self.output_buffer)), repr(char))
-            self.output_buffer.append(char)
+            self.output_port_value = value
+            self._output_written = True
             return
-        if addr == OUTPUT_NUM_PORT:
-            num_str = str(value)
-            for ch in num_str:
-                self.output_buffer.append(ch)
-            logging.debug("output_num: %s << %s", repr("".join(self.output_buffer)), num_str)
         if 0 <= addr < self.data_memory_size:
             self.data_memory[addr] = value
 
@@ -176,9 +170,10 @@ def format_instruction(instr: dict | None) -> str:
 
 
 class ControlUnit:
-    def __init__(self, program: list[dict], data_path: DataPath, interrupt_schedule: list[tuple[int, str]]) -> None:
+    def __init__(self, program: list[dict], data_path: DataPath, interrupt_schedule: list[tuple[int, int]],
+                 start_addr: int = 0) -> None:
         self.program = program
-        self.pc = 0
+        self.pc = start_addr
         self.data_path = data_path
         self.tick = 0
         self.interrupt_schedule = sorted(interrupt_schedule, key=lambda x: x[0])
@@ -190,6 +185,11 @@ class ControlUnit:
         self.irq_transition = False
         self._halt_pending = False
         self.irq_pending = False
+        self.irq_resume_pc = 0
+        self.irq_flags_val = 0
+        self.irq_ivt_addr = 0
+        self.current_changes = ""
+        self.current_instruction_name = "-"
 
     def check_interrupt(self) -> bool:
         return self.irq_pending and self.data_path.ps.IEF
@@ -200,43 +200,43 @@ class ControlUnit:
         mode = instr.get("mode", default_mode)
 
         if opcode == Opcode.NOP:
-            return 2
+            return 1
 
         if opcode in (Opcode.LOAD, Opcode.ADD, Opcode.SUB, Opcode.AND, Opcode.OR):
             if mode == AddressingMode.IMMEDIATE:
-                return 4
+                return 3
             if mode == AddressingMode.ABSOLUTE:
-                return 5
+                return 4
             if mode == AddressingMode.INDIRECT:
-                return 7
+                return 6
 
         if opcode == Opcode.STORE:
             if mode == AddressingMode.ABSOLUTE:
-                return 4
+                return 3
             if mode == AddressingMode.INDIRECT:
-                return 7
+                return 6
 
         if opcode in (Opcode.JMP, Opcode.JZ, Opcode.JN, Opcode.JC, Opcode.JNC):
-                return 3
+            return 2
 
         if opcode == Opcode.CALL:
-            return 5
+            return 3
 
         if opcode == Opcode.PUSH:
-            return 4
+            return 3
 
         if opcode == Opcode.POP:
-            return 6
+            return 5
 
         if opcode == Opcode.SPECIAL:
             if mode == SpecialOpcode.HALT:
-                return 2
+                return 1
             if mode in (SpecialOpcode.EI, SpecialOpcode.DI, SpecialOpcode.INC, SpecialOpcode.DEC, SpecialOpcode.NOT):
-                return 3
+                return 2
             if mode == SpecialOpcode.RET:
-                return 6
+                return 5
             if mode == SpecialOpcode.IRET:
-                return 10
+                return 9
 
         return 1
 
@@ -254,7 +254,7 @@ class ControlUnit:
             return self.data_path.signal_rd(ptr)
         return arg
 
-    def execute_instruction(self, instr: dict) -> None:
+    def execute_instruction(self, instr: dict, cycle: int) -> None:
         opcode = instr["opcode"]
         default_mode = SpecialOpcode.HALT if opcode == Opcode.SPECIAL else AddressingMode.ABSOLUTE
         mode = instr.get("mode", default_mode)
@@ -262,8 +262,60 @@ class ControlUnit:
         if arg >= 0x800000:
             arg -= 0x1000000
 
+        total_cycles = self.get_instruction_cycles(instr)
         next_pc = instr["index"] + 1
-        self.pc = next_pc
+
+        if cycle == 1:
+            self.pc = next_pc
+
+        if opcode == Opcode.SPECIAL and mode == SpecialOpcode.IRET:
+            if cycle == 2:
+                self.data_path.sp += 1
+            elif cycle == 5:
+                flags = self.data_path.signal_rd(self.data_path.sp)
+                self.data_path.ps.Z = bool(flags & 1)
+                self.data_path.ps.N = bool(flags & 2)
+                self.data_path.ps.C = bool(flags & 4)
+            elif cycle == 6:
+                self.data_path.sp += 1
+            elif cycle == 9:
+                self.pc = self.data_path.signal_rd(self.data_path.sp)
+                self.data_path.ps.IEF = True
+                self.in_interrupt = False
+            return
+
+        if opcode == Opcode.POP:
+            if cycle == 2:
+                self.data_path.sp += 1
+            elif cycle == 5:
+                val = self.data_path.signal_rd(self.data_path.sp)
+                self.data_path.signal_latch_acc(val)
+            return
+
+        if opcode == Opcode.PUSH:
+            if cycle == 3:
+                self.data_path.signal_push(self.data_path.acc)
+            return
+
+        if opcode == Opcode.SPECIAL and mode == SpecialOpcode.RET:
+            if cycle == 2:
+                self.data_path.sp += 1
+            elif cycle == 5:
+                self.pc = self.data_path.signal_rd(self.data_path.sp)
+                self.in_interrupt = False
+            return
+
+        if opcode == Opcode.CALL:
+            if cycle == 3:
+                self.data_path.signal_push(next_pc)
+                if mode == AddressingMode.RELATIVE:
+                    self.pc = next_pc + arg
+                else:
+                    self.pc = arg
+            return
+
+        if cycle < total_cycles:
+            return
 
         if opcode == Opcode.NOP:
             return
@@ -283,14 +335,6 @@ class ControlUnit:
             result, carry = self.data_path.alu_op(opcode, operand)
             self.data_path.signal_latch_acc(result)
             self.data_path.ps.C = carry
-            return
-
-        if opcode == Opcode.PUSH:
-            self.data_path.signal_push(self.data_path.acc)
-            return
-
-        if opcode == Opcode.POP:
-            self.data_path.signal_latch_acc(self.data_path.signal_pop())
             return
 
         if opcode == Opcode.JC:
@@ -332,14 +376,6 @@ class ControlUnit:
                     self.pc = arg
             return
 
-        if opcode == Opcode.CALL:
-            self.data_path.signal_push(next_pc)
-            if mode == AddressingMode.RELATIVE:
-                self.pc = next_pc + arg
-            else:
-                self.pc = arg
-            return
-
         if opcode == Opcode.SPECIAL:
             if mode == SpecialOpcode.HALT:
                 self._halt_pending = True
@@ -347,14 +383,6 @@ class ControlUnit:
                 self.data_path.ps.IEF = True
             elif mode == SpecialOpcode.DI:
                 self.data_path.ps.IEF = False
-            elif mode == SpecialOpcode.IRET:
-                flags = self.data_path.signal_pop()
-                self.pc = self.data_path.signal_pop()
-                self.data_path.ps.Z = bool(flags & 1)
-                self.data_path.ps.N = bool(flags & 2)
-                self.data_path.ps.C = bool(flags & 4)
-                self.data_path.ps.IEF = True
-                self.in_interrupt = False
             elif mode == SpecialOpcode.INC:
                 result, _ = self.data_path.alu_op(mode, 0)
                 self.data_path.signal_latch_acc(result)
@@ -364,101 +392,228 @@ class ControlUnit:
             elif mode == SpecialOpcode.NOT:
                 result, _ = self.data_path.alu_op(mode, 0)
                 self.data_path.signal_latch_acc(result)
-            elif mode == SpecialOpcode.RET:
-                self.pc = self.data_path.signal_pop()
-                self.in_interrupt = False
             return
 
     def process_next_tick(self) -> None:
+        old_acc = self.data_path.acc
+        old_pc = self.pc
+        old_sp = self.data_path.sp
+        old_z, old_n, old_c, old_ief = (
+            self.data_path.ps.Z,
+            self.data_path.ps.N,
+            self.data_path.ps.C,
+            self.data_path.ps.IEF,
+        )
         self.tick += 1
+        arrived_val = None
 
-        arrived_char = None
         while (self.interrupt_index < len(self.interrupt_schedule)
-            and self.interrupt_schedule[self.interrupt_index][0] <= self.tick
+               and self.interrupt_schedule[self.interrupt_index][0] <= self.tick
         ):
-            arrived_char = self.interrupt_schedule[self.interrupt_index][1]
+            arrived_val = self.interrupt_schedule[self.interrupt_index][1]
             self.interrupt_index += 1
 
-        if arrived_char is not None:
-            self.data_path.input_port_value = ord(arrived_char)
+        if arrived_val is not None:
+            self.data_path.input_port_value = arrived_val
             self.irq_pending = True
-            logging.debug("INPUT PORT OVERWRITE at tick %d: char=%s", self.tick, repr(arrived_char))
+            logging.debug("INPUT PORT OVERWRITE at tick %d: value=%d", self.tick, arrived_val)
 
         if self.busy_ticks > 0:
+            if self.irq_transition:
+                self.current_instruction_name = "interrupt"
+                current_cycle = 6 - self.busy_ticks + 1
+                if current_cycle == 2:
+                    self.data_path.signal_push(self.irq_resume_pc)
+                elif current_cycle == 4:
+                    self.data_path.signal_push(self.irq_flags_val)
+                elif current_cycle == 6:
+                    self.pc = self.irq_ivt_addr
+                    self.data_path.ps.IEF = False
+                    self.in_interrupt = True
+            else:
+                if self.current_instr is not None:
+                    self.current_instruction_name = format_instruction(self.current_instr)
+                    total_cycles = self.get_instruction_cycles(self.current_instr)
+                    current_cycle = total_cycles - self.busy_ticks + 1
+                    self.execute_instruction(self.current_instr, current_cycle)
+
             self.busy_ticks -= 1
             if self.busy_ticks == 0:
                 if self._halt_pending:
                     self.halted = True
                 if self.irq_transition:
                     self.irq_transition = False
+            self._track_register_changes(old_acc, old_pc, old_sp, old_z, old_n, old_c, old_ief)
             return
 
         if self.check_interrupt():
             self.irq_pending = False
             logging.debug("INTERRUPT TRIGGERED at tick %d", self.tick)
-            resume_pc = self.pc
-            flags_val = int(self.data_path.ps.Z) | (int(self.data_path.ps.N) << 1) | (int(self.data_path.ps.C) << 2)
-            self.data_path.signal_push(resume_pc)
-            self.data_path.signal_push(flags_val)
-            ivt_addr = self.data_path.signal_rd(IVT_INPUT)
-            self.pc = ivt_addr
-            self.data_path.ps.IEF = False
-            self.in_interrupt = True
+            self.irq_resume_pc = self.pc
+            self.irq_flags_val = int(self.data_path.ps.Z) | (int(self.data_path.ps.N) << 1) | (
+                    int(self.data_path.ps.C) << 2)
+
+            self.irq_ivt_addr = self.data_path.signal_rd(IVT_INPUT)
             self.current_instr = None
             self.irq_transition = True
-            self.busy_ticks = 2
+            self.busy_ticks = 6
+            self.current_instruction_name = "interrupt"
+            self._track_register_changes(old_acc, old_pc, old_sp, old_z, old_n, old_c, old_ief)
             return
 
         if self.pc < len(self.program):
             instr = self.program[self.pc]
             self.current_instr = instr
+            self.current_instruction_name = format_instruction(instr)
             cycles = self.get_instruction_cycles(instr)
-            self.execute_instruction(instr)
-            self.busy_ticks = cycles - 1
+            self.busy_ticks = cycles
+
+            self.execute_instruction(self.current_instr, 1)
+            self.busy_ticks -= 1
             if self.busy_ticks == 0:
                 if self._halt_pending:
                     self.halted = True
         else:
             self.current_instr = None
+            self.current_instruction_name = "-"
             self.halted = True
+        self._track_register_changes(old_acc, old_pc, old_sp, old_z, old_n, old_c, old_ief)
+
+    def _track_register_changes(self, old_acc: int, old_pc: int, old_sp: int,
+                                old_z: bool, old_n: bool, old_c: bool, old_ief: bool) -> None:
+        changes = []
+        if self.data_path.acc != old_acc:
+            changes.append(f"ACC: {old_acc} -> {self.data_path.acc}")
+        if self.pc != old_pc:
+            changes.append(f"PC: {old_pc} -> {self.pc}")
+        if self.data_path.sp != old_sp:
+            changes.append(f"SP: 0x{old_sp:04X} -> 0x{self.data_path.sp:04X}")
+
+        ps_changes = []
+        if self.data_path.ps.Z != old_z:
+            ps_changes.append(f"Z: {int(old_z)} -> {int(self.data_path.ps.Z)}")
+        if self.data_path.ps.N != old_n:
+            ps_changes.append(f"N: {int(old_n)} -> {int(self.data_path.ps.N)}")
+        if self.data_path.ps.C != old_c:
+            ps_changes.append(f"C: {int(old_c)} -> {int(self.data_path.ps.C)}")
+        if self.data_path.ps.IEF != old_ief:
+            ps_changes.append(f"IEF: {int(old_ief)} -> {int(self.data_path.ps.IEF)}")
+        if ps_changes:
+            changes.append("PS: " + ", ".join(ps_changes))
+
+        if changes:
+            self.current_changes = " | " + ", ".join(changes)
+        else:
+            self.current_changes = ""
 
     def __repr__(self) -> str:
-        instr_str = format_instruction(self.current_instr)
         state_repr = (
             f"TICK: {self.tick:3} PC: {self.pc:3} | "
-            f"INSTR: {instr_str:<12} | "
-            f"ACC: {self.data_path.acc:5} | PSW: {self.data_path.ps}"
+            f"INSTR: {self.current_instruction_name:<14} | "
+            f"ACC: {self.data_path.acc:5} | SP: 0x{self.data_path.sp:04X}| PS: {self.data_path.ps}"
         )
         if self.in_interrupt:
             state_repr += " [IRQ]"
+        state_repr += self.current_changes
         return state_repr
 
-
-def simulation(code: list[dict], data: list[tuple[int, int]], interrupt_schedule: list[tuple[int, str]],
-    data_memory_size: int = 1024, limit: int = 10000) -> tuple[str, int]:
+def simulation(code: list[dict], data: list[tuple[int, int]], interrupt_schedule: list[tuple[int, int]],
+               data_memory_size: int = 1024, limit: int = 10000, start_addr: int = 0, output_format: str = "char") -> \
+tuple[str, int]:
     data_path = DataPath(data_memory_size, data)
-    control_unit = ControlUnit(code, data_path, interrupt_schedule)
-
-    logging.debug("%s", control_unit)
+    control_unit = ControlUnit(code, data_path, interrupt_schedule, start_addr)
+    output_buffer: list[int] = []
 
     try:
         while control_unit.tick < limit and not control_unit.halted:
             control_unit.process_next_tick()
             logging.debug("%s", control_unit)
+            if data_path._output_written:
+                val = data_path.output_port_value
+                if output_format == "num":
+                    current_out = " ".join(str(v) for v in output_buffer)
+                    new_val_str = str(val)
+                else:
+                    current_out = "".join(chr(v & 0xFF) for v in output_buffer)
+                    new_val_str = chr(val & 0xFF)
+
+                logging.debug("output: %s << %s", repr(current_out), repr(new_val_str))
+
+                output_buffer.append(val)
+                data_path._output_written = False
+
     except (ZeroDivisionError, OverflowError):
         logging.exception("Runtime error")
 
     if control_unit.tick >= limit:
-        logging.warning("Limit exceeded!")
+        logging.warning("Limit exceeded")
 
-    logging.info("output_buffer: %s", repr("".join(data_path.output_buffer)))
-    return "".join(data_path.output_buffer), control_unit.tick
+    if output_format == "num":
+        stdout = " ".join(str(val) for val in output_buffer)
+    else:
+        stdout = "".join(chr(val & 0xFF) for val in output_buffer)
+
+    logging.info("output_buffer: %s", repr(stdout))
+    return stdout, control_unit.tick
+
+def parse_interrupt_value(token: str) -> int:
+    token = token.strip()
+    if len(token) >= 2 and token.startswith('"') and token.endswith('"'):
+        content = token[1:-1]
+        decoded = []
+        i = 0
+        while i < len(content):
+            if content[i] == "\\" and i + 1 < len(content):
+                esc = content[i + 1]
+                if esc == "n":
+                    decoded.append("\n")
+                elif esc == "t":
+                    decoded.append("\t")
+                elif esc == "0":
+                    decoded.append("\x00")
+                elif esc == "\\":
+                    decoded.append("\\")
+                else:
+                    decoded.append(content[i])
+                    i += 1
+                    continue
+                i += 2
+            else:
+                decoded.append(content[i])
+                i += 1
+        decoded_str = "".join(decoded)
+        return ord(decoded_str[0]) if decoded_str else 0
+    try:
+        if token.startswith("0x") or token.startswith("0X"):
+            return int(token, 16)
+        return int(token)
+    except ValueError as e:
+        raise ValueError(
+            f"Invalid input token '{token}'. Characters/Strings must be in double quotes (e.g. \"a\"), "
+            f"numbers must be raw integers (e.g. 42)."
+        ) from e
 
 
-def main(code_file: str, input_file: str | None = None) -> None:
+def parse_interrupt_schedule_from_str(schedule_str: str | None) -> list[tuple[int, int]]:
+    interrupt_schedule: list[tuple[int, int]] = []
+    if not schedule_str:
+        return interrupt_schedule
+
+    for line in schedule_str.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split(",")
+        tick_val = int(parts[0].strip())
+        val = parse_interrupt_value(parts[1])
+        interrupt_schedule.append((tick_val, val))
+    return interrupt_schedule
+
+
+def main(code_file: str, input_file: str | None = None, output_format: str = "char") -> None:
     with open(code_file, "rb") as f:
         binary_code = f.read()
-    code = from_bytes(binary_code)
+    code, start_addr = from_bytes(binary_code)
 
     data: list[tuple[int, int]] = []
     data_json = code_file + ".data.json"
@@ -466,58 +621,40 @@ def main(code_file: str, input_file: str | None = None) -> None:
         with open(data_json, encoding="utf-8") as f:
             raw = json.load(f)
             data = [(d[0], d[1]) for d in raw.get("data", [])]
+            start_addr = raw.get("start_addr", 0)
     except FileNotFoundError:
         pass
 
-    interrupt_schedule: list[tuple[int, str]] = []
+    interrupt_schedule: list[tuple[int, int]] = []
     if input_file:
         try:
             with open(input_file, encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    parts = line.split(",")
-                    tick_val = int(parts[0].strip())
-                    char = parts[1].strip()
-                    if len(char) > 1 and char.startswith('"') and char.endswith('"'):
-                        char = char[1:-1]
-                    decoded = []
-                    i = 0
-                    while i < len(char):
-                        if char[i] == "\\" and i + 1 < len(char):
-                            esc = char[i + 1]
-                            if esc == "n":
-                                decoded.append("\n")
-                            elif esc == "t":
-                                decoded.append("\t")
-                            elif esc == "0":
-                                decoded.append("\x00")
-                            elif esc == "\\":
-                                decoded.append("\\")
-                            else:
-                                decoded.append(char[i])
-                                i += 1
-                                continue
-                            i += 2
-                        else:
-                            decoded.append(char[i])
-                            i += 1
-                    char = "".join(decoded)
-                    interrupt_schedule.append((tick_val, char))
+                interrupt_schedule = parse_interrupt_schedule_from_str(f.read())
         except FileNotFoundError:
             pass
 
-    output, ticks = simulation(code, data, interrupt_schedule, data_memory_size=1024, limit=10000)
+    output, ticks = simulation(code, data, interrupt_schedule, data_memory_size=1024, limit=10000,
+                               start_addr=start_addr, output_format=output_format)
     print(output)
     print("ticks:", ticks)
 
-
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.DEBUG)
+
     if len(sys.argv) >= 2:
         code_file = sys.argv[1]
-        input_file = sys.argv[2] if len(sys.argv) > 2 else None
-        main(code_file, input_file)
+        input_file = None
+        output_format = "char"
+        if len(sys.argv) == 3:
+            arg2 = sys.argv[2]
+            if arg2 in ("char", "num"):
+                output_format = arg2
+            else:
+                input_file = arg2
+        elif len(sys.argv) > 3:
+            input_file = sys.argv[2]
+            output_format = sys.argv[3]
+        main(code_file, input_file, output_format)
     else:
-        print("Usage: machine.py <code.bin> [<input_schedule.txt>]")
+        print("Usage: python machine.py <code.bin> [<input_file>] [<output_format: char|num>]")
+        print("Or: python machine.py <code.bin> [<output_format: char|num>]")

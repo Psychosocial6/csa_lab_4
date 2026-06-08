@@ -2,11 +2,11 @@
 
 .section .data
 array:
-    .word 53   ; '5'
-    .word 51   ; '3'
-    .word 56   ; '8'
-    .word 49   ; '1'
-    .word 52   ; '4'
+    .word 5
+    .word 3
+    .word 8
+    .word 1
+    .word 4
     .word 0
 array_len: .word 5
 i: .word 0

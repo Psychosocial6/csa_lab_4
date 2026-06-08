@@ -8,8 +8,8 @@ from dataclasses import dataclass, field
 from isa import (
     MNEMONIC_TO_OPCODE_MODE,
     AddressingMode,
-    SpecialOpcode,
     Opcode,
+    SpecialOpcode,
     Term,
     to_bytes,
     to_hex,
@@ -38,7 +38,7 @@ def parse_number(token: str) -> int:
     return int(token)
 
 
-def parse_operand(token: str, state: ParserState) -> tuple[AddressingMode, int | str]:
+def parse_operand(token: str) -> tuple[AddressingMode, int | str]:
     token = token.strip()
     if token.startswith("#"):
         inner = token[1:].strip()
@@ -277,9 +277,8 @@ def first_pass(text: str) -> ParserState:
             )
             state.code_addr += 1
         else:
-            mode, arg = parse_operand(operand_str, state)
-            if mode_override is not None:
-                mode = mode_override
+            parsed_mode, arg = parse_operand(operand_str)
+            mode: AddressingMode | SpecialOpcode = mode_override if mode_override is not None else parsed_mode
             state.code.append(
                 {
                     "index": state.code_addr,
@@ -294,7 +293,7 @@ def first_pass(text: str) -> ParserState:
     return state
 
 
-def resolve_value(val: int | str, state: ParserState, current_addr: int = 0) -> int:
+def resolve_value(val: int | str, state: ParserState) -> int:
     if isinstance(val, int):
         return val
     if val in state.constants:
@@ -320,7 +319,7 @@ def second_pass(state: ParserState) -> tuple[list[dict], list[tuple[int, int]]]:
         if "arg" in new_instr:
             arg = new_instr["arg"]
             if isinstance(arg, str):
-                arg = resolve_value(arg, state, new_instr["index"])
+                arg = resolve_value(arg, state)
             if new_instr["mode"] == AddressingMode.RELATIVE:
                 arg = arg - (new_instr["index"] + 1)
             new_instr["arg"] = arg & 0xFFFFFF
@@ -343,41 +342,29 @@ def pad_code(code: list[dict]) -> list[dict]:
     return padded
 
 
-def translate(text: str) -> tuple[list[dict], list[tuple[int, int]]]:
+def translate(text: str) -> tuple[list[dict], list[tuple[int, int]], int]:
     text = preprocess(text)
     state = first_pass(text)
     if "start" not in state.labels:
-        raise ValueError("Translation error: Mandatory entry point 'start:' label is missing!")
+        raise ValueError("Translation error: Mandatory entry point 'start:' label is missing")
 
     start_section, start_addr = state.labels["start"]
     if start_section != ".text":
-        raise ValueError("Translation error: 'start:' label must be in the .text section!")
-
-    if start_addr > 0:
-        has_instr_at_zero = any(instr["index"] == 0 for instr in state.code)
-        if not has_instr_at_zero:
-            state.code.append(
-                {
-                    "index": 0,
-                    "opcode": Opcode.JMP,
-                    "mode": AddressingMode.ABSOLUTE,
-                    "arg": "start",
-                }
-            )
+        raise ValueError("Translation error: 'start:' label must be in the .text section")
 
     code, data = second_pass(state)
     data.sort(key=lambda x: x[0])
     code.sort(key=lambda x: x["index"])
     code = pad_code(code)
-    return code, data
+    return code, data, start_addr
 
 
 def main(source: str, target: str) -> None:
     with open(source, encoding="utf-8") as f:
         text = f.read()
 
-    code, data = translate(text)
-    binary_code = to_bytes(code)
+    code, data, start_addr = translate(text)
+    binary_code = to_bytes(code, start_addr)
     hex_code = to_hex(code)
 
     os.makedirs(os.path.dirname(os.path.abspath(target)) or ".", exist_ok=True)

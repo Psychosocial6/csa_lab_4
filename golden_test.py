@@ -26,25 +26,15 @@ def str_presenter(dumper: Any, data: str) -> Any:
 yaml.representer.SafeRepresenter.add_representer(str, str_presenter)
 
 
-def parse_interrupt_schedule_from_str(schedule_str: str | None) -> list[tuple[int, str]]:
-    interrupt_schedule: list[tuple[int, str]] = []
-    if not schedule_str:
-        return interrupt_schedule
-
-    for line in schedule_str.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        parts = line.split(",")
-        tick_val = int(parts[0].strip())
-        char = parts[1].strip()
-        if len(char) > 1 and char.startswith('"') and char.endswith('"'):
-            char = char[1:-1]
+def parse_interrupt_value(token: str) -> int:
+    token = token.strip()
+    if len(token) >= 2 and token.startswith('"') and token.endswith('"'):
+        content = token[1:-1]
         decoded = []
         i = 0
-        while i < len(char):
-            if char[i] == "\\" and i + 1 < len(char):
-                esc = char[i + 1]
+        while i < len(content):
+            if content[i] == "\\" and i + 1 < len(content):
+                esc = content[i + 1]
                 if esc == "n":
                     decoded.append("\n")
                 elif esc == "t":
@@ -54,15 +44,38 @@ def parse_interrupt_schedule_from_str(schedule_str: str | None) -> list[tuple[in
                 elif esc == "\\":
                     decoded.append("\\")
                 else:
-                    decoded.append(char[i])
+                    decoded.append(content[i])
                     i += 1
                     continue
                 i += 2
             else:
-                decoded.append(char[i])
+                decoded.append(content[i])
                 i += 1
-        char = "".join(decoded)
-        interrupt_schedule.append((tick_val, char))
+        decoded_str = "".join(decoded)
+        return ord(decoded_str[0]) if decoded_str else 0
+    try:
+        if token.startswith("0x") or token.startswith("0X"):
+            return int(token, 16)
+        return int(token)
+    except ValueError as e:
+        raise ValueError(
+            f"Invalid input token '{token}'. Characters/Strings must be in double quotes (e.g. \"a\"), "
+            f"numbers must be raw integers (e.g. 42)."
+        ) from e
+
+def parse_interrupt_schedule_from_str(schedule_str: str | None) -> list[tuple[int, int]]:
+    interrupt_schedule: list[tuple[int, int]] = []
+    if not schedule_str:
+        return interrupt_schedule
+
+    for line in schedule_str.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split(",")
+        tick_val = int(parts[0].strip())
+        val = parse_interrupt_value(parts[1])
+        interrupt_schedule.append((tick_val, val))
     return interrupt_schedule
 
 
@@ -91,12 +104,14 @@ def test_golden(golden_file: Path) -> None:
         else:
             stdin_str = ""
 
-    code, data = translator.translate(source_code)
+    code, data, start_addr = translator.translate(source_code)
     actual_code_hex = isa.to_hex(code)
 
     interrupt_schedule = parse_interrupt_schedule_from_str(stdin_str)
+
     memory_size = config.get("config", {}).get("memory_size", 1024)
     limit = config.get("config", {}).get("limit", 10000)
+    output_format = config.get("config", {}).get("output_format", "char")
 
     log_stream = io.StringIO()
     log_handler = logging.StreamHandler(log_stream)
@@ -115,6 +130,8 @@ def test_golden(golden_file: Path) -> None:
             interrupt_schedule=interrupt_schedule,
             data_memory_size=memory_size,
             limit=limit,
+            start_addr=start_addr,
+            output_format=output_format
         )
     finally:
         root_logger.removeHandler(log_handler)

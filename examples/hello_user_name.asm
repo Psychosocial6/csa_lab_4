@@ -1,13 +1,20 @@
 .equ OUTPUT_PORT 0xFFFFF1
 .equ INPUT_PORT  0xFFFFF0
-.equ IVT_INPUT   0xFFFFF3
+.equ IVT_INPUT   0xFFFFF2
 .equ NAME_START  0x200
+.equ GREET_POLITE 1
+
+.macro PRINT_NEWLINE
+    LOAD #10
+    STORE OUTPUT_PORT
+.endmacro
 
 .section .data
 greeting: .string "Hello, "
 name_ptr: .word 0
 input_done: .word 0
 end_msg: .string "!\n"
+polite_msg: .string "Have a nice day!\n"
 ptr: .word 0
 
 .section .text
@@ -44,6 +51,11 @@ wait:
     CALL print_string
     LOAD #end_msg
     CALL print_string
+    .if GREET_POLITE
+        PRINT_NEWLINE
+        LOAD #polite_msg
+        CALL print_string
+    .endif
     HALT
 
 print_string:

@@ -2,7 +2,6 @@
 .equ INPUT_PORT  0xFFFFF0
 
 .section .text
-
 .org 0x10
 handler:
     LOAD INPUT_PORT

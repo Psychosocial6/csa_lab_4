@@ -1,4 +1,4 @@
-.equ OUTPUT_NUM_PORT 0xFFFFF2
+.equ OUTPUT_PORT 0xFFFFF1
 
 .section .data
 N: .word 10
@@ -46,7 +46,7 @@ loop_done:
     LOAD sq_sum
     SUB sum_sq
     STORE result
-    STORE OUTPUT_NUM_PORT
+    STORE OUTPUT_PORT
     HALT
 
 multiply:
