@@ -55,6 +55,7 @@ class DataPath:
         self.input_port_value = 0
         self.output_port_value = 0
         self._output_written = False
+        self.ivt_address = DEFAULT_IVT_INPUT
 
     def signal_latch_acc(self, value: int) -> None:
         self.acc = value & 0xFFFFFFFF
@@ -69,7 +70,7 @@ class DataPath:
         if addr == OUTPUT_PORT:
             return 0
         if addr == IVT_INPUT:
-            return DEFAULT_IVT_INPUT
+            return self.ivt_address
         if 0 <= addr < self.data_memory_size:
             val = self.data_memory[addr]
             if addr + 1 < self.data_memory_size:
@@ -89,6 +90,9 @@ class DataPath:
         if addr == OUTPUT_PORT:
             self.output_port_value = value
             self._output_written = True
+            return
+        if addr == IVT_INPUT:
+            self.ivt_address = value & 0xFFFFFF
             return
 
         if 0 <= addr < self.data_memory_size:
