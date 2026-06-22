@@ -273,10 +273,16 @@ class ControlUnit:
         if mode == AddressingMode.IMMEDIATE:
             return arg
         if mode == AddressingMode.ABSOLUTE:
-            return self.data_path.signal_rd(arg)
+            val = self.data_path.signal_rd(arg)
+            if (arg & 0xFFFFFF) == INPUT_PORT:
+                self.irq_pending = False
+            return val
         if mode == AddressingMode.INDIRECT:
             ptr = self.data_path.signal_rd(arg)
-            return self.data_path.signal_rd(ptr)
+            val =  self.data_path.signal_rd(ptr)
+            if (arg & 0xFFFFFF) == INPUT_PORT:
+                self.irq_pending = False
+            return val
         return arg
 
     def execute_instruction(self, instr: dict, cycle: int) -> None:
