@@ -279,7 +279,7 @@ class ControlUnit:
             return val
         if mode == AddressingMode.INDIRECT:
             ptr = self.data_path.signal_rd(arg)
-            val =  self.data_path.signal_rd(ptr)
+            val = self.data_path.signal_rd(ptr)
             if (arg & 0xFFFFFF) == INPUT_PORT:
                 self.irq_pending = False
             return val
