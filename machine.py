@@ -195,7 +195,11 @@ def format_instruction(instr: dict | None) -> str:
 
 class ControlUnit:
     def __init__(
-        self, program: list[dict], data_path: DataPath, interrupt_schedule: list[tuple[int, int]], start_addr: int = 0
+        self,
+        program: list[dict],
+        data_path: DataPath,
+        interrupt_schedule: list[tuple[int, int, bool]],
+        start_addr: int = 0,
     ) -> None:
         self.program = program
         self.pc = start_addr
@@ -437,18 +441,33 @@ class ControlUnit:
         )
         self.tick += 1
         arrived_val = None
+        arrived_is_char = False
 
         while (
             self.interrupt_index < len(self.interrupt_schedule)
             and self.interrupt_schedule[self.interrupt_index][0] <= self.tick
         ):
             arrived_val = self.interrupt_schedule[self.interrupt_index][1]
+            arrived_is_char = self.interrupt_schedule[self.interrupt_index][2]
             self.interrupt_index += 1
 
         if arrived_val is not None:
             self.data_path.input_port_value = arrived_val
             self.irq_pending = True
-            logging.debug("INPUT PORT OVERWRITE at tick %d: value=%d", self.tick, arrived_val)
+
+            if arrived_is_char:
+                if 32 <= arrived_val <= 126:
+                    val_repr = f"{arrived_val} ('{chr(arrived_val)}')"
+                elif arrived_val == 10:
+                    val_repr = f"{arrived_val} ('\\n')"
+                elif arrived_val == 9:
+                    val_repr = f"{arrived_val} ('\\t')"
+                else:
+                    val_repr = str(arrived_val)
+            else:
+                val_repr = str(arrived_val)
+
+            logging.debug("INPUT PORT OVERWRITE at tick %d: value=%s", self.tick, val_repr)
 
         if self.busy_ticks > 0:
             if self.irq_transition:
@@ -554,7 +573,7 @@ class ControlUnit:
 def simulation(
     code: list[dict],
     data: list[tuple[int, int]],
-    interrupt_schedule: list[tuple[int, int]],
+    interrupt_schedule: list[tuple[int, int, bool]],
     data_memory_size: int = 1024,
     limit: int = 10000,
     start_addr: int = 0,
@@ -597,7 +616,7 @@ def simulation(
     return stdout, control_unit.tick
 
 
-def parse_interrupt_value(token: str) -> int:
+def parse_interrupt_value(token: str) -> tuple[int, bool]:
     token = token.strip()
     if len(token) >= 2 and token.startswith('"') and token.endswith('"'):
         content = token[1:-1]
@@ -623,11 +642,11 @@ def parse_interrupt_value(token: str) -> int:
                 decoded.append(content[i])
                 i += 1
         decoded_str = "".join(decoded)
-        return ord(decoded_str[0]) if decoded_str else 0
+        return (ord(decoded_str[0]) if decoded_str else 0), True
     try:
         if token.startswith("0x") or token.startswith("0X"):
-            return int(token, 16)
-        return int(token)
+            return int(token, 16), False
+        return int(token), False
     except ValueError as e:
         raise ValueError(
             f"Invalid input token '{token}'. Characters/Strings must be in double quotes (e.g. \"a\"), "
@@ -635,8 +654,8 @@ def parse_interrupt_value(token: str) -> int:
         ) from e
 
 
-def parse_interrupt_schedule_from_str(schedule_str: str | None) -> list[tuple[int, int]]:
-    interrupt_schedule: list[tuple[int, int]] = []
+def parse_interrupt_schedule_from_str(schedule_str: str | None) -> list[tuple[int, int, bool]]:
+    interrupt_schedule: list[tuple[int, int, bool]] = []
     if not schedule_str:
         return interrupt_schedule
 
@@ -646,8 +665,8 @@ def parse_interrupt_schedule_from_str(schedule_str: str | None) -> list[tuple[in
             continue
         parts = line.split(",")
         tick_val = int(parts[0].strip())
-        val = parse_interrupt_value(parts[1])
-        interrupt_schedule.append((tick_val, val))
+        val, is_char = parse_interrupt_value(parts[1])
+        interrupt_schedule.append((tick_val, val, is_char))
     return interrupt_schedule
 
 
@@ -665,7 +684,7 @@ def main(code_file: str, input_file: str | None = None, output_format: str = "ch
     except FileNotFoundError:
         pass
 
-    interrupt_schedule: list[tuple[int, int]] = []
+    interrupt_schedule: list[tuple[int, int, bool]] = []
     if input_file:
         try:
             with open(input_file, encoding="utf-8") as f:

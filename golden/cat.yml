@@ -87,7 +87,7 @@ out_journal: |-
   TICK:  47 PC:  36 | INSTR: jmp 0x20       | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 32 -> 36
   TICK:  48 PC:  32 | INSTR: jmp 0x20       | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 36 -> 32
   TICK:  49 PC:  36 | INSTR: jmp 0x20       | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 32 -> 36
-  INPUT PORT OVERWRITE at tick 50: value=72
+  INPUT PORT OVERWRITE at tick 50: value=72 ('H')
   TICK:  50 PC:  32 | INSTR: jmp 0x20       | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 36 -> 32
   INTERRUPT TRIGGERED at tick 51
   TICK:  51 PC:  32 | INSTR: interrupt      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
@@ -190,7 +190,7 @@ out_journal: |-
   TICK: 147 PC:  32 | INSTR: jmp 0x20       | ACC:    72 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 36 -> 32
   TICK: 148 PC:  36 | INSTR: jmp 0x20       | ACC:    72 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 32 -> 36
   TICK: 149 PC:  32 | INSTR: jmp 0x20       | ACC:    72 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 36 -> 32
-  INPUT PORT OVERWRITE at tick 150: value=101
+  INPUT PORT OVERWRITE at tick 150: value=101 ('e')
   INTERRUPT TRIGGERED at tick 150
   TICK: 150 PC:  32 | INSTR: interrupt      | ACC:    72 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
   TICK: 151 PC:  32 | INSTR: interrupt      | ACC:    72 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
@@ -293,7 +293,7 @@ out_journal: |-
   TICK: 247 PC:  36 | INSTR: jmp 0x20       | ACC:   101 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 32 -> 36
   TICK: 248 PC:  32 | INSTR: jmp 0x20       | ACC:   101 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 36 -> 32
   TICK: 249 PC:  36 | INSTR: jmp 0x20       | ACC:   101 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 32 -> 36
-  INPUT PORT OVERWRITE at tick 250: value=108
+  INPUT PORT OVERWRITE at tick 250: value=108 ('l')
   TICK: 250 PC:  32 | INSTR: jmp 0x20       | ACC:   101 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 36 -> 32
   INTERRUPT TRIGGERED at tick 251
   TICK: 251 PC:  32 | INSTR: interrupt      | ACC:   101 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
@@ -396,7 +396,7 @@ out_journal: |-
   TICK: 347 PC:  32 | INSTR: jmp 0x20       | ACC:   108 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 36 -> 32
   TICK: 348 PC:  36 | INSTR: jmp 0x20       | ACC:   108 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 32 -> 36
   TICK: 349 PC:  32 | INSTR: jmp 0x20       | ACC:   108 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 36 -> 32
-  INPUT PORT OVERWRITE at tick 350: value=108
+  INPUT PORT OVERWRITE at tick 350: value=108 ('l')
   INTERRUPT TRIGGERED at tick 350
   TICK: 350 PC:  32 | INSTR: interrupt      | ACC:   108 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
   TICK: 351 PC:  32 | INSTR: interrupt      | ACC:   108 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
@@ -499,7 +499,7 @@ out_journal: |-
   TICK: 447 PC:  36 | INSTR: jmp 0x20       | ACC:   108 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 32 -> 36
   TICK: 448 PC:  32 | INSTR: jmp 0x20       | ACC:   108 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 36 -> 32
   TICK: 449 PC:  36 | INSTR: jmp 0x20       | ACC:   108 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 32 -> 36
-  INPUT PORT OVERWRITE at tick 450: value=111
+  INPUT PORT OVERWRITE at tick 450: value=111 ('o')
   TICK: 450 PC:  32 | INSTR: jmp 0x20       | ACC:   108 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 36 -> 32
   INTERRUPT TRIGGERED at tick 451
   TICK: 451 PC:  32 | INSTR: interrupt      | ACC:   108 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1

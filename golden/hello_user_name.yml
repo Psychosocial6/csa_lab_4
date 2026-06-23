@@ -183,7 +183,7 @@ out_journal: |-
   TICK:  47 PC:  88 | INSTR: load 0x24      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
   TICK:  48 PC:  88 | INSTR: load 0x24      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
   TICK:  49 PC:  92 | INSTR: jz 0x54        | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 88 -> 92
-  INPUT PORT OVERWRITE at tick 50: value=87
+  INPUT PORT OVERWRITE at tick 50: value=87 ('W')
   TICK:  50 PC:  84 | INSTR: jz 0x54        | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 92 -> 84
   INTERRUPT TRIGGERED at tick 51
   TICK:  51 PC:  84 | INSTR: interrupt      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
@@ -235,7 +235,7 @@ out_journal: |-
   TICK:  97 PC:  88 | INSTR: load 0x24      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
   TICK:  98 PC:  88 | INSTR: load 0x24      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
   TICK:  99 PC:  92 | INSTR: jz 0x54        | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 88 -> 92
-  INPUT PORT OVERWRITE at tick 100: value=111
+  INPUT PORT OVERWRITE at tick 100: value=111 ('o')
   TICK: 100 PC:  84 | INSTR: jz 0x54        | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 92 -> 84
   INTERRUPT TRIGGERED at tick 101
   TICK: 101 PC:  84 | INSTR: interrupt      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
@@ -287,7 +287,7 @@ out_journal: |-
   TICK: 147 PC:  88 | INSTR: load 0x24      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
   TICK: 148 PC:  88 | INSTR: load 0x24      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
   TICK: 149 PC:  92 | INSTR: jz 0x54        | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 88 -> 92
-  INPUT PORT OVERWRITE at tick 150: value=114
+  INPUT PORT OVERWRITE at tick 150: value=114 ('r')
   TICK: 150 PC:  84 | INSTR: jz 0x54        | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 92 -> 84
   INTERRUPT TRIGGERED at tick 151
   TICK: 151 PC:  84 | INSTR: interrupt      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
@@ -339,7 +339,7 @@ out_journal: |-
   TICK: 197 PC:  88 | INSTR: load 0x24      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
   TICK: 198 PC:  88 | INSTR: load 0x24      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
   TICK: 199 PC:  92 | INSTR: jz 0x54        | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 88 -> 92
-  INPUT PORT OVERWRITE at tick 200: value=108
+  INPUT PORT OVERWRITE at tick 200: value=108 ('l')
   TICK: 200 PC:  84 | INSTR: jz 0x54        | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 92 -> 84
   INTERRUPT TRIGGERED at tick 201
   TICK: 201 PC:  84 | INSTR: interrupt      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
@@ -391,7 +391,7 @@ out_journal: |-
   TICK: 247 PC:  88 | INSTR: load 0x24      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
   TICK: 248 PC:  88 | INSTR: load 0x24      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1
   TICK: 249 PC:  92 | INSTR: jz 0x54        | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 88 -> 92
-  INPUT PORT OVERWRITE at tick 250: value=100
+  INPUT PORT OVERWRITE at tick 250: value=100 ('d')
   TICK: 250 PC:  84 | INSTR: jz 0x54        | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1 | PC: 92 -> 84
   INTERRUPT TRIGGERED at tick 251
   TICK: 251 PC:  84 | INSTR: interrupt      | ACC:     0 | SP: 0x03FC| PS: Z=1 N=0 C=0 IEF=1

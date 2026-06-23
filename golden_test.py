@@ -26,60 +26,6 @@ def str_presenter(dumper: Any, data: str) -> Any:
 yaml.representer.SafeRepresenter.add_representer(str, str_presenter)
 
 
-def parse_interrupt_value(token: str) -> int:
-    token = token.strip()
-    if len(token) >= 2 and token.startswith('"') and token.endswith('"'):
-        content = token[1:-1]
-        decoded = []
-        i = 0
-        while i < len(content):
-            if content[i] == "\\" and i + 1 < len(content):
-                esc = content[i + 1]
-                if esc == "n":
-                    decoded.append("\n")
-                elif esc == "t":
-                    decoded.append("\t")
-                elif esc == "0":
-                    decoded.append("\x00")
-                elif esc == "\\":
-                    decoded.append("\\")
-                else:
-                    decoded.append(content[i])
-                    i += 1
-                    continue
-                i += 2
-            else:
-                decoded.append(content[i])
-                i += 1
-        decoded_str = "".join(decoded)
-        return ord(decoded_str[0]) if decoded_str else 0
-    try:
-        if token.startswith("0x") or token.startswith("0X"):
-            return int(token, 16)
-        return int(token)
-    except ValueError as e:
-        raise ValueError(
-            f"Invalid input token '{token}'. Characters/Strings must be in double quotes (e.g. \"a\"), "
-            f"numbers must be raw integers (e.g. 42)."
-        ) from e
-
-
-def parse_interrupt_schedule_from_str(schedule_str: str | None) -> list[tuple[int, int]]:
-    interrupt_schedule: list[tuple[int, int]] = []
-    if not schedule_str:
-        return interrupt_schedule
-
-    for line in schedule_str.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        parts = line.split(",")
-        tick_val = int(parts[0].strip())
-        val = parse_interrupt_value(parts[1])
-        interrupt_schedule.append((tick_val, val))
-    return interrupt_schedule
-
-
 @pytest.mark.parametrize(
     "golden_file",
     sorted(GOLDEN_DIR.glob("*.yml")),
@@ -107,8 +53,7 @@ def test_golden(golden_file: Path) -> None:
 
     code, data, start_addr = translator.translate(source_code)
     actual_code_hex = isa.to_hex(code)
-
-    interrupt_schedule = parse_interrupt_schedule_from_str(stdin_str)
+    interrupt_schedule = machine.parse_interrupt_schedule_from_str(stdin_str)
 
     memory_size = config.get("config", {}).get("memory_size", 1024)
     limit = config.get("config", {}).get("limit", 10000)
