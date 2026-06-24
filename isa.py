@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import struct
-from collections import namedtuple
 from enum import Enum
 
 
@@ -47,7 +46,6 @@ OUTPUT_PORT = 0xFFFFF1
 IVT_INPUT = 0xFFFFF2
 DEFAULT_IVT_INPUT = 0x10
 
-Term = namedtuple("Term", ["line", "pos", "symbol"])
 
 _BINARY_TO_OPCODE: dict[int, Opcode] = {op.value: op for op in Opcode}
 _BINARY_TO_ADDRESSING_MODE: dict[int, AddressingMode] = {m.value: m for m in AddressingMode}

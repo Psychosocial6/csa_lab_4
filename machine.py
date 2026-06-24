@@ -110,12 +110,6 @@ class DataPath:
         if self.sp < 0:
             raise OverflowError("Stack overflow")
 
-    def signal_pop(self) -> int:
-        self.sp += 4
-        if self.sp >= self.data_memory_size:
-            raise OverflowError("Stack underflow")
-        return self.signal_rd(self.sp)
-
     def alu_op(self, operation: Opcode | SpecialOpcode, operand: int) -> tuple[int, bool]:
         result = self.acc
         carry = False

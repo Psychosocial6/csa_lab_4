@@ -11,7 +11,6 @@ from isa import (
     AddressingMode,
     Opcode,
     SpecialOpcode,
-    Term,
     to_bytes,
     to_hex,
 )
@@ -262,7 +261,6 @@ def first_pass(text: str) -> ParserState:
                     "index": state.code_addr,
                     "opcode": opcode,
                     "mode": AddressingMode.ABSOLUTE,
-                    "term": Term(line_no, 0, line),
                 }
             )
             state.code_addr += 4
@@ -273,7 +271,6 @@ def first_pass(text: str) -> ParserState:
                     "index": state.code_addr,
                     "opcode": opcode,
                     "mode": mode_override,
-                    "term": Term(line_no, 0, line),
                 }
             )
             state.code_addr += 4
@@ -286,7 +283,6 @@ def first_pass(text: str) -> ParserState:
                     "opcode": opcode,
                     "mode": mode,
                     "arg": arg,
-                    "term": Term(line_no, 0, line),
                 }
             )
             state.code_addr += 4
